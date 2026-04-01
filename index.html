@@ -277,6 +277,19 @@
     }
     #clearBtn:hover { color: #555; }
 
+    /* 모바일 팝업 카드 */
+    #mobileCardWrap { display: none; }
+    #mobileCardWrap.show { display: flex; }
+    #mobileCard .info-card {
+      width: 100% !important;
+      padding: 14px 16px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    #mobileCard .info-card h3 { font-size: 15px; }
+    #mobileCard .info-card .row { font-size: 12px; }
+    #mobileCard .info-card .btn-place { padding: 9px 0; font-size: 13px; }
+
     /* 토스트 메시지 */
     #toast {
       position: fixed;
@@ -359,8 +372,10 @@
 <!-- 토스트 -->
 <div id="toast"></div>
 
-<!-- 모바일 팝업 (오버레이 없음 - 지도 이동 자유) -->
-<div id="mobileCard" style="display:none;position:fixed;left:20px;right:20px;z-index:501;max-width:340px;margin:0 auto;"></div>
+<!-- 모바일 팝업 (pointer-events:none 으로 지도 이동 자유) -->
+<div id="mobileCardWrap" style="display:none;position:fixed;inset:0;z-index:501;align-items:center;justify-content:center;padding:20px;pointer-events:none;">
+  <div id="mobileCard" style="pointer-events:all;width:100%;max-width:300px;"></div>
+</div>
 
 <button id="locateBtn" title="현재 위치">
   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -403,21 +418,16 @@
     if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
   }
 
-  // X 버튼 공통 닫기 (데스크톱 InfoWindow + 모바일 카드 둘 다)
+  // X 버튼 공통 닫기
   function closeCurrentCard() {
     closeInfoWindow();
-    document.getElementById('mobileCard').style.display = 'none';
+    document.getElementById('mobileCardWrap').classList.remove('show');
   }
 
   function showMobileCard(html) {
     const card = document.getElementById('mobileCard');
     card.innerHTML = html.replace(/onclick="closeInfoWindow\(\)"/g, 'onclick="closeCurrentCard()"');
-    card.style.display = 'block';
-    // 헤더 높이 제외하고 남은 영역 수직 정중앙에 배치
-    const headerH = document.querySelector('header').offsetHeight;
-    const availH = window.innerHeight - headerH;
-    const cardH = card.offsetHeight;
-    card.style.top = (headerH + (availH - cardH) / 2) + 'px';
+    document.getElementById('mobileCardWrap').classList.add('show');
   }
 
   function parseCSV(text) {
