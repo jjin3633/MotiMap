@@ -308,6 +308,98 @@
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ── 데스크톱 사이드 패널 ── */
+    #sidePanel {
+      position: fixed;
+      right: 0;
+      top: 70px;
+      width: 300px;
+      height: calc(100dvh - 70px);
+      background: #fff;
+      border-left: 1px solid #e5e5e5;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+    }
+    #sidePanel.show { display: flex; }
+
+    /* ── 모바일 바텀 시트 ── */
+    #bottomPanel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 52vh;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.13);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      transition: height 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    #bottomPanel.show { display: flex; }
+    #bottomPanel.expanded { height: 86vh; }
+
+    /* 공통 패널 스타일 */
+    .panel-handle {
+      width: 36px; height: 4px;
+      background: #ddd; border-radius: 2px;
+      margin: 10px auto 6px;
+      cursor: grab; flex-shrink: 0;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #080808;
+    }
+    .panel-subtitle {
+      font-size: 12px;
+      color: #999;
+      margin-top: 2px;
+    }
+    .panel-close {
+      background: none; border: none;
+      font-size: 18px; color: #bbb;
+      cursor: pointer; line-height: 1;
+      padding: 0;
+    }
+    .panel-close:hover { color: #333; }
+    .panel-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px 0;
+    }
+    .panel-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f8f8f8;
+      transition: background 0.1s;
+    }
+    .panel-item:hover, .panel-item:active { background: #f0f6ff; }
+    .panel-item-name {
+      font-size: 14px;
+      color: #080808;
+      font-weight: 500;
+    }
+    .panel-item-dist {
+      font-size: 12px;
+      color: #0072e3;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
     /* 반응형 */
     @media (max-width: 768px) {
       header {
@@ -370,6 +462,31 @@
 
 <!-- 토스트 -->
 <div id="toast"></div>
+
+<!-- 데스크톱 사이드 패널 -->
+<div id="sidePanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">내 근처 센터</div>
+      <div class="panel-subtitle" id="sidePanelSub"></div>
+    </div>
+    <button class="panel-close" onclick="closeNearbyPanel()">✕</button>
+  </div>
+  <div class="panel-list" id="sidePanelList"></div>
+</div>
+
+<!-- 모바일 바텀 시트 -->
+<div id="bottomPanel">
+  <div class="panel-handle" id="bottomHandle"></div>
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">내 근처 센터</div>
+      <div class="panel-subtitle" id="bottomPanelSub"></div>
+    </div>
+    <button class="panel-close" onclick="closeNearbyPanel()">✕</button>
+  </div>
+  <div class="panel-list" id="bottomPanelList"></div>
+</div>
 
 <!-- 모바일 팝업 (pointer-events:none 으로 지도 이동 자유) -->
 <div id="mobileCardWrap" style="position:fixed;inset:0;z-index:501;align-items:center;justify-content:center;padding:20px;pointer-events:none;">
@@ -736,10 +853,76 @@
   // 현재 위치
   let myMarker = null;
 
+  // ── 거리 계산 (Haversine) ──
+  function calcDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function formatDist(m) {
+    return m < 1000 ? `${Math.round(m)}m` : `${(m/1000).toFixed(1)}km`;
+  }
+
+  // ── 근처 센터 패널 ──
+  function showNearbyPanel(myLat, myLng) {
+    const sorted = centerMarkers
+      .map(c => ({ ...c, dist: calcDistance(myLat, myLng, c.position.lat(), c.position.lng()) }))
+      .sort((a, b) => a.dist - b.dist);
+
+    const listHtml = sorted.map(c =>
+      `<div class="panel-item" data-name="${c.name}">
+        <span class="panel-item-name">${c.name}</span>
+        <span class="panel-item-dist">${formatDist(c.dist)}</span>
+      </div>`
+    ).join('');
+
+    const subtitle = `총 ${sorted.length}개 센터`;
+
+    if (window.innerWidth > 768) {
+      document.getElementById('sidePanelList').innerHTML = listHtml;
+      document.getElementById('sidePanelSub').textContent = subtitle;
+      document.getElementById('sidePanel').classList.add('show');
+    } else {
+      document.getElementById('bottomPanelList').innerHTML = listHtml;
+      document.getElementById('bottomPanelSub').textContent = subtitle;
+      document.getElementById('bottomPanel').classList.add('show');
+    }
+
+    document.querySelectorAll('.panel-item').forEach(el => {
+      el.addEventListener('click', function() {
+        closeNearbyPanel();
+        openCenterByName(this.dataset.name);
+      });
+    });
+  }
+
+  function closeNearbyPanel() {
+    document.getElementById('sidePanel').classList.remove('show');
+    document.getElementById('bottomPanel').classList.remove('show', 'expanded');
+  }
+
+  // 바텀 시트 드래그로 펼치기/접기
+  (function() {
+    const panel = document.getElementById('bottomPanel');
+    const handle = document.getElementById('bottomHandle');
+    let startY = 0;
+    handle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+    handle.addEventListener('touchend', e => {
+      const diff = startY - e.changedTouches[0].clientY;
+      if (diff > 40) panel.classList.add('expanded');
+      else if (diff < -40) panel.classList.remove('expanded');
+    });
+  })();
+
+  // ── 현재 위치 ──
   function locateMe() {
     if (!navigator.geolocation) { showToast('위치 서비스를 지원하지 않아요.'); return; }
     navigator.geolocation.getCurrentPosition(function (pos) {
-      const myPos = new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+      const { latitude: lat, longitude: lng } = pos.coords;
+      const myPos = new naver.maps.LatLng(lat, lng);
       if (myMarker) myMarker.setMap(null);
       myMarker = new naver.maps.Marker({
         map, position: myPos,
@@ -749,7 +932,8 @@
         },
       });
       map.setCenter(myPos);
-      map.setZoom(18);
+      map.setZoom(14);
+      showNearbyPanel(lat, lng);
     }, function () { showToast('위치 권한을 확인해주세요.'); });
   }
 
@@ -761,6 +945,7 @@
     if (searchMarker) { searchMarker.setMap(null); searchMarker = null; }
     if (myMarker) { myMarker.setMap(null); myMarker = null; }
     closeInfoWindow();
+    closeNearbyPanel();
     map.setCenter(new naver.maps.LatLng(37.5665, 126.9780));
     map.setZoom(12);
   }
