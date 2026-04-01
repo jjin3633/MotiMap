@@ -509,9 +509,7 @@
     .catch(() => showToast('센터 데이터를 불러오지 못했어요.'));
 
   naver.maps.Event.addListener(map, 'click', closeCurrentCard);
-  naver.maps.Event.addListener(map, 'dragstart', function () {
-    document.getElementById('mobileCard').style.display = 'none';
-  });
+  naver.maps.Event.addListener(map, 'dragstart', closeCurrentCard);
 
   // 500m 이상 줌인 시 센터명 표시 (zoom >= 14)
   const mapEl = document.getElementById('map');
