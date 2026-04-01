@@ -381,6 +381,7 @@
   });
 
   let currentInfoWindow = null;
+  const centerMarkers = []; // { name, position, marker, infoWindow }
 
   // 토스트
   function showToast(msg, ms = 2500) {
@@ -492,16 +493,32 @@
 
     naver.maps.Event.addListener(marker, 'click', function () {
       if (window.innerWidth <= 768) {
-        // 모바일: 화면 중앙 팝업
         closeInfoWindow();
         showMobileCard(infoWindow.getContent());
       } else {
-        // 데스크톱: 마커 옆 팝업
         if (currentInfoWindow) currentInfoWindow.close();
         infoWindow.open(map, marker);
         currentInfoWindow = infoWindow;
       }
     });
+
+    centerMarkers.push({ name: center.name, position, marker, infoWindow });
+  }
+
+  function openCenterByName(name) {
+    const found = centerMarkers.find(c => c.name === name);
+    if (!found) return false;
+    map.setCenter(found.position);
+    map.setZoom(17);
+    if (window.innerWidth <= 768) {
+      closeInfoWindow();
+      showMobileCard(found.infoWindow.getContent());
+    } else {
+      if (currentInfoWindow) currentInfoWindow.close();
+      found.infoWindow.open(map, found.marker);
+      currentInfoWindow = found.infoWindow;
+    }
+    return true;
   }
 
   fetch(SHEET_CSV)
@@ -563,18 +580,39 @@
   const autocompleteList = document.getElementById('autocompleteList');
   let activeIdx = -1;
 
+  const centerIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="#0072e3" stroke="none" style="flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>`;
+
   function showAutocomplete(query) {
     if (!query) { autocompleteList.classList.remove('show'); return; }
-    const matches = STATIONS.filter(s => s.includes(query)).slice(0, 8);
-    if (!matches.length) { autocompleteList.classList.remove('show'); return; }
 
-    autocompleteList.innerHTML = matches.map((s, i) => {
-      const lines = getStationLines(s);
-      const icons = lines.map(line => {
-        const color = LINE_COLORS[line] || LINE_COLORS['기본'];
-        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="18" height="14" rx="3"/><path d="M3 10h18"/><path d="M8 17l-2 4"/><path d="M16 17l2 4"/><circle cx="8.5" cy="6.5" r="1" fill="${color}" stroke="none"/><circle cx="15.5" cy="6.5" r="1" fill="${color}" stroke="none"/></svg>`;
-      }).join('');
-      return `<div class="autocomplete-item" data-idx="${i}" data-name="${s}"><span style="display:flex;gap:2px;flex-shrink:0;">${icons}</span>${s}</div>`;
+    // 센터명 매칭 (먼저)
+    const centerMatches = centerMarkers
+      .filter(c => c.name.includes(query))
+      .slice(0, 4)
+      .map(c => ({ name: c.name, type: 'center' }));
+
+    // 지하철역 매칭
+    const stationMatches = STATIONS
+      .filter(s => s.includes(query))
+      .slice(0, 8 - centerMatches.length)
+      .map(s => ({ name: s, type: 'station' }));
+
+    const all = [...centerMatches, ...stationMatches];
+    if (!all.length) { autocompleteList.classList.remove('show'); return; }
+
+    autocompleteList.innerHTML = all.map((item, i) => {
+      let iconHtml;
+      if (item.type === 'center') {
+        iconHtml = `<span style="display:flex;gap:2px;flex-shrink:0;">${centerIcon}</span>`;
+      } else {
+        const lines = getStationLines(item.name);
+        const icons = lines.map(line => {
+          const color = LINE_COLORS[line] || LINE_COLORS['기본'];
+          return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="18" height="14" rx="3"/><path d="M3 10h18"/><path d="M8 17l-2 4"/><path d="M16 17l2 4"/><circle cx="8.5" cy="6.5" r="1" fill="${color}" stroke="none"/><circle cx="15.5" cy="6.5" r="1" fill="${color}" stroke="none"/></svg>`;
+        }).join('');
+        iconHtml = `<span style="display:flex;gap:2px;flex-shrink:0;">${icons}</span>`;
+      }
+      return `<div class="autocomplete-item" data-idx="${i}" data-name="${item.name}" data-type="${item.type}">${iconHtml}${item.name}</div>`;
     }).join('');
     autocompleteList.classList.add('show');
     activeIdx = -1;
@@ -582,9 +620,17 @@
     autocompleteList.querySelectorAll('.autocomplete-item').forEach(el => {
       el.addEventListener('mousedown', function(e) {
         e.preventDefault();
-        searchInput.value = this.dataset.name;
+        const name = this.dataset.name;
+        const type = this.dataset.type;
         autocompleteList.classList.remove('show');
-        doSearch();
+        if (type === 'center') {
+          searchInput.value = name;
+          clearBtn.style.display = 'block';
+          openCenterByName(name);
+        } else {
+          searchInput.value = name;
+          doSearch();
+        }
       });
     });
   }
@@ -636,29 +682,44 @@
     const query = searchInput.value.trim();
     if (!query) return;
     autocompleteList.classList.remove('show');
-    searchInput.blur(); // 모바일 키보드 닫기
+    searchInput.blur();
+
+    // 센터명 검색 우선
+    if (openCenterByName(query)) return;
 
     const isStation = STATIONS.includes(query);
     setSearchLoading(true);
 
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + (isStation ? ' 서울' : ''))}&format=json&limit=1&accept-language=ko&countrycodes=kr`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.length) { showToast('주소를 찾을 수 없어요.'); return; }
-        const pos = new naver.maps.LatLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
-        if (searchMarker) searchMarker.setMap(null);
-        searchMarker = new naver.maps.Marker({
-          map, position: pos,
-          icon: {
-            content: '<div style="width:14px;height:14px;background:#ff4444;border:2px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(255,68,68,0.4);"></div>',
-            anchor: new naver.maps.Point(7, 7),
-          },
-        });
-        map.setCenter(pos);
-        map.setZoom(17);
-      })
-      .catch(() => showToast('검색 중 오류가 발생했어요.'))
-      .finally(() => setSearchLoading(false));
+    const q = query + (isStation ? ' 서울' : '');
+    // 상세주소(층/호수 등) 포함 시 점점 단순화해서 재시도
+    const queries = [q, q.replace(/\s*\d+층.*/, '').replace(/\s*[A-Z동호]+\d+.*/, '').trim(), q.split(' ').slice(0, 3).join(' ')];
+
+    const tryFetch = (idx) => {
+      if (idx >= queries.length) {
+        showToast('주소를 찾을 수 없어요. 더 간단하게 입력해보세요.');
+        setSearchLoading(false);
+        return;
+      }
+      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queries[idx])}&format=json&limit=1&accept-language=ko&countrycodes=kr`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.length) { tryFetch(idx + 1); return; }
+          const pos = new naver.maps.LatLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
+          if (searchMarker) searchMarker.setMap(null);
+          searchMarker = new naver.maps.Marker({
+            map, position: pos,
+            icon: {
+              content: '<div style="width:14px;height:14px;background:#ff4444;border:2px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(255,68,68,0.4);"></div>',
+              anchor: new naver.maps.Point(7, 7),
+            },
+          });
+          map.setCenter(pos);
+          map.setZoom(17);
+          setSearchLoading(false);
+        })
+        .catch(() => { showToast('검색 중 오류가 발생했어요.'); setSearchLoading(false); });
+    };
+    tryFetch(0);
   }
 
   document.getElementById('searchBtn').addEventListener('click', doSearch);
