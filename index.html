@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
   <title>모티맵 | 내 근처 모티피지오 센터 찾기</title>
   <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Inter:wght@700&display=swap" rel="stylesheet" />
   <style>
@@ -15,6 +15,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
     }
 
@@ -173,6 +174,8 @@
       justify-content: center;
       z-index: 100;
       transition: background 0.2s;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     #locateBtn:hover { background: #0072e3; }
@@ -283,6 +286,10 @@
       }
       .search-bar { width: 100%; }
       .autocomplete-list { position: fixed; left: 16px; right: 16px; top: auto; width: auto; }
+
+      /* 검색창 포커스 시 로고 숨김 */
+      header.search-focused .header-left { display: none; }
+      header.search-focused { padding: 8px 16px; gap: 0; }
     }
 
     @media (max-width: 480px) {
@@ -530,6 +537,17 @@
       });
     });
   }
+
+  // 모바일: 검색창 포커스 시 로고 숨김
+  const headerEl = document.querySelector('header');
+  searchInput.addEventListener('focus', function() {
+    if (window.innerWidth <= 768) headerEl.classList.add('search-focused');
+  });
+  searchInput.addEventListener('blur', function() {
+    headerEl.classList.remove('search-focused');
+    // 키보드 닫힌 후 내 위치 버튼 강제 재표시
+    setTimeout(() => { document.getElementById('locateBtn').style.display = 'flex'; }, 100);
+  });
 
   searchInput.addEventListener('input', function() {
     showAutocomplete(this.value.trim());
