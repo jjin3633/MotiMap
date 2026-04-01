@@ -360,7 +360,7 @@
 <div id="toast"></div>
 
 <!-- 모바일 팝업 (오버레이 없음 - 지도 이동 자유) -->
-<div id="mobileCard" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:501;width:calc(100vw - 40px);max-width:340px;"></div>
+<div id="mobileCard" style="display:none;position:fixed;left:20px;right:20px;z-index:501;max-width:340px;margin:0 auto;"></div>
 
 <button id="locateBtn" title="현재 위치">
   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -412,13 +412,11 @@
     const card = document.getElementById('mobileCard');
     card.innerHTML = html.replace(/onclick="closeInfoWindow\(\)"/g, 'onclick="closeCurrentCard()"');
     card.style.display = 'block';
-    // 헤더 높이 제외하고 남은 영역 정중앙에 배치
+    // 헤더 높이 제외하고 남은 영역 수직 정중앙에 배치
     const headerH = document.querySelector('header').offsetHeight;
     const availH = window.innerHeight - headerH;
     const cardH = card.offsetHeight;
     card.style.top = (headerH + (availH - cardH) / 2) + 'px';
-    card.style.left = '50%';
-    card.style.transform = 'translateX(-50%)';
   }
 
   function parseCSV(text) {
