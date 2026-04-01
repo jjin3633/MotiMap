@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>모티맵 | 내 근처 모티피지오 센터 찾기</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Inter:wght@700&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,11 +12,14 @@
       font-family: 'Questrial', sans-serif;
       background: #fff;
       color: #080808;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
     }
 
     header {
       background: #fff;
-      color: #080808;
       border-bottom: 1px solid #e5e5e5;
       height: 70px;
       display: flex;
@@ -33,6 +35,7 @@
       padding: 0 40px;
       display: flex;
       align-items: center;
+      gap: 16px;
       justify-content: space-between;
     }
 
@@ -40,22 +43,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-    }
-
-    .logo-mark {
-      width: 32px;
-      height: 32px;
-      background: #0072e3;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .logo-mark svg {
-      width: 18px;
-      height: 18px;
-      fill: white;
+      flex-shrink: 0;
     }
 
     header h1 {
@@ -70,23 +58,100 @@
       font-size: 13px;
       font-weight: 600;
       color: #999;
-      margin-left: 4px;
     }
 
-    .badge {
-      background: transparent;
-      color: #0072e3;
-      border: 1px solid #0072e3;
-      border-radius: 20px;
-      padding: 4px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
+    /* 검색바 */
+    .search-wrap {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
     }
+
+    @media (max-width: 1000px) {
+      header p { display: none; }
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar:focus-within {
+      border-color: #0072e3;
+      background: #fff;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: 'Questrial', sans-serif;
+      color: #080808;
+      outline: none;
+    }
+
+    .search-bar input::placeholder { color: #bbb; }
+
+    .search-bar button {
+      background: #0072e3;
+      border: none;
+      padding: 0 16px;
+      height: 42px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .search-bar button:hover { background: #005bbf; }
+    .search-bar button svg { width: 18px; height: 18px; }
+
+    /* 자동완성 드롭다운 */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      z-index: 200;
+      overflow: hidden;
+      display: none;
+    }
+
+    .autocomplete-list.show { display: block; }
+
+    .autocomplete-item {
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #080808;
+      transition: background 0.1s;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.active { background: #f0f6ff; color: #0072e3; }
+
+    .autocomplete-item span { font-size: 15px; }
 
     #map {
       width: 100%;
-      height: calc(100vh - 70px);
+      flex: 1;
     }
 
     /* 현재 위치 버튼 */
@@ -167,7 +232,6 @@
     }
 
     .info-card .row span:first-child { flex-shrink: 0; }
-
     .info-card a { color: #0072e3; text-decoration: none; }
 
     .info-card .icon-row {
@@ -188,18 +252,39 @@
       font-weight: 600;
       text-align: center;
       text-decoration: none;
-      letter-spacing: 0.2px;
       transition: background 0.2s;
     }
 
     .info-card .btn-place:hover { background: #005bbf; }
 
     /* 반응형 */
-    @media (max-width: 480px) {
-      header { padding: 0 16px; height: 56px; }
-      header h1 { font-size: 17px; }
+    @media (max-width: 768px) {
+      header {
+        height: auto;
+        padding: 10px 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .header-inner {
+        flex-direction: column;
+        padding: 0;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .header-left { justify-content: center; }
       header p { display: none; }
-      #map { height: calc(100vh - 56px); }
+      .search-wrap {
+        position: static;
+        transform: none;
+        width: 100%;
+      }
+      .search-bar { width: 100%; }
+      .autocomplete-list { position: fixed; left: 16px; right: 16px; top: auto; width: auto; }
+    }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 17px; }
       .info-card { width: calc(100vw - 24px); }
       #locateBtn { bottom: 20px; right: 12px; width: 44px; height: 44px; }
     }
@@ -209,13 +294,20 @@
 
 <header>
   <div class="header-inner">
-  <div class="header-left">
-    <div>
-      <h1>Moti-Map</h1>
+    <div class="header-left" style="cursor:pointer;" onclick="resetMap()">
+      <h1>Moti Map</h1>
     </div>
-    <p>내 근처 모티피지오 센터 찾기</p>
-  </div>
-  <div class="badge" id="centerCount">센터 0곳</div>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="역이름 또는 주소 입력 (예: 홍대입구역)" autocomplete="off" />
+        <button id="searchBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
+      <div class="autocomplete-list" id="autocompleteList"></div>
+    </div>
   </div>
 </header>
 
@@ -271,8 +363,11 @@
       position,
       title: center.name,
       icon: {
-        content: `<div style="width:14px;height:14px;background:#0072e3;border:2.5px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,114,227,0.5);"></div>`,
-        anchor: new naver.maps.Point(7, 7),
+        content: `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div style="width:24px;height:24px;background:#0072e3;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,114,227,0.5);"></div>
+          <div style="font-size:12px;font-family:'Questrial',sans-serif;color:#0072e3;font-weight:600;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,0.9),0 -1px 3px rgba(255,255,255,0.9),1px 0 3px rgba(255,255,255,0.9),-1px 0 3px rgba(255,255,255,0.9);">${center.name}</div>
+        </div>`,
+        anchor: new naver.maps.Point(12, 12),
       },
     });
 
@@ -324,7 +419,6 @@
     .then(res => res.text())
     .then(text => {
       const centers = parseCSV(text).filter(c => c.lat && c.lng);
-      document.getElementById('centerCount').textContent = `센터 ${centers.length}곳`;
       centers.forEach(addMarker);
     })
     .catch(() => alert('센터 데이터를 불러오지 못했어요.'));
@@ -333,8 +427,166 @@
     if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
   });
 
+  // 지하철역 목록
+  const STATIONS = [
+    '가락시장역','가산디지털단지역','가양역','가오리역','각골역','간석역','간석오거리역','갈매역','갈산역','강남구청역','강남역','강동구청역','강동역','강릉역','강변역','강북구청역','강서역','개롱역','개봉역','개화산역','거여역','검단산역','검암역','경마공원역','경복궁역','경의중앙선','고덕역','고속터미널역','고잔역','공덕역','공릉역','공항시장역','관악역','광교역','광교중앙역','광나루역','광명사거리역','광화문역','구로역','구로디지털단지역','구반포역','구산역','구의역','구일역','국수역','군포역','귤현역','금천구청역','금호역','기흥역','길음역','김포공항역','까치산역','까치울역','남구로역','남위례역','남태령역','낙성대역','노량진역','노원역','녹번역','녹사평역','능곡역','다산역','당고개역','당산역','대공원역','대림역','대방역','대야미역','대치역','대화역','덕소역','도곡역','도림천역','도봉산역','도봉역','독립문역','독바위역','동대문역','동대문역사문화공원역','동대입구역','동묘앞역','동인천역','두정역','디지털미디어시티역','뚝섬역','뚝섬유원지역','마곡역','마곡나루역','마들역','마포역','마포구청역','망원역','먹골역','면목역','명동역','명일역','모란역','목동역','몽촌토성역','무악재역','미금역','미아역','미아사거리역','발산역','방배역','방이역','방학역','배곧한울역','백석역','벌말역','범계역','보라매역','복정역','봉화산역','부천역','부평역','부평구청역','불광역','사당역','사릉역','산본역','삼각지역','삼산체육관역','삼성역','삼성중앙역','삼전역','상계역','상봉역','상왕십리역','상월곡역','서대문역','서동탄역','서빙고역','서울대입구역','서울숲역','서울역','서현역','석계역','선릉역','선바위역','선정릉역','성복역','성수역','성신여대입구역','소사역','소요산역','송내역','송도역','송파역','수내역','수락산역','수리산역','수서역','수원역','숙대입구역','순천향대학교병원역','승가사역','시청역','신길역','신대방역','신대방삼거리역','신도림역','신림역','신반포역','신사역','신설동역','신수역','신용산역','신이문역','신정역','신정네거리역','신촌역','아차산역','아현역','안국역','안산역','안양역','압구정역','압구정로데오역','양재역','양재시민의숲역','양천구청역','양천향교역','어린이대공원역','에티오피아촌역','역삼역','연신내역','염창역','영등포구청역','영등포시장역','영등포역','오금역','오리역','오목교역','오산대역','오이도역','옥수역','온수역','왕십리역','외대앞역','용답역','용마산역','용산역','우이신설선','월계역','월드컵경기장역','을지로3가역','을지로4가역','을지로입구역','응암역','이수역','이촌역','인천역','일원역','장한평역','잠실역','잠실나루역','잠실새내역','장지역','정발산역','정왕역','정자역','제기동역','중계역','중곡역','중랑역','증미역','지축역','진접역','창동역','천왕역','천호역','철산역','청구역','청담역','청량리역','초안산역','충무로역','탄현역','태릉입구역','테헤란로역','통일로역','판교역','평촌역','포이역','풍산역','하계역','학여울역','한강진역','한성대입구역','한티역','합정역','행당역','행신역','혜화역','홍대입구역','화곡역','화랑대역','황학역','회기역','회현역','휘경역'
+  ];
+
+  // 노선별 컬러
+  const LINE_COLORS = {
+    1: '#0052A4', 2: '#00A84D', 3: '#EF7C1C', 4: '#00A4E3',
+    5: '#996CAC', 6: '#CD7C2F', 7: '#747F00', 8: '#E6186C',
+    9: '#BDB092', 경의중앙: '#77C4A3', 분당: '#F5A200', 신분당: '#D31145',
+    공항: '#0090D2', 우이신설: '#B7C452', 기본: '#0072e3'
+  };
+
+  // 역 이름 → 여러 노선 배열
+  const STATION_LINES = {
+    '서울역':[1,4,'경의중앙','공항'],'시청역':[1,2],'종각역':[1],'종로3가역':[1,3,5],'동대문역':[1,4],'청량리역':[1,'경의중앙'],'제기동역':[1],'회기역':[1,'경의중앙'],'외대앞역':[1],'회현역':[1,4],'남영역':[1],'용산역':[1,'경의중앙'],'노량진역':[1,9],'대방역':[1],'신길역':[1,5],'영등포역':[1],'신도림역':[1,2],'구일역':[1],'개봉역':[1],'오류동역':[1],'온수역':[1,7],'역곡역':[1],'부천역':[1],'송내역':[1],'부평역':[1],'동인천역':[1],'인천역':[1],'광명사거리역':[1,7],'가산디지털단지역':[1,7],'금천구청역':[1],'석계역':[1,6],'방학역':[1],'도봉역':[1],'도봉산역':[1,7],
+    '홍대입구역':[2,'경의중앙','공항'],'합정역':[2,6],'당산역':[2,9],'영등포구청역':[2,5],'대림역':[2,7],'구로디지털단지역':[2],'신대방역':[2],'신림역':[2],'서울대입구역':[2],'낙성대역':[2],'사당역':[2,4],'방배역':[2],'서초역':[2],'교대역':[2,3],'강남역':[2,'신분당'],'역삼역':[2],'선릉역':[2,'분당'],'삼성역':[2],'종합운동장역':[2,9],'잠실새내역':[2],'잠실역':[2,8],'강변역':[2],'구의역':[2],'건대입구역':[2,7],'성수역':[2],'왕십리역':[2,5,'경의중앙'],'뚝섬역':[2],'신당역':[2,6],'상왕십리역':[2],'이대역':[2],'아현역':[2],'충정로역':[2,5],'을지로입구역':[2],'을지로3가역':[2,3],'을지로4가역':[2,5],'동대문역사문화공원역':[2,4,5],'신설동역':[2,'우이신설'],
+    '경복궁역':[3],'안국역':[3],'충무로역':[3,4],'동대입구역':[3],'약수역':[3,6],'금호역':[3],'옥수역':[3,'경의중앙'],'압구정역':[3],'신사역':[3,'신분당'],'잠원역':[3],'고속터미널역':[3,7,9],'남부터미널역':[3],'양재역':[3,'신분당'],'매봉역':[3],'도곡역':[3,'분당'],'대치역':[3],'학여울역':[3],'일원역':[3],'수서역':[3,'분당'],'가락시장역':[3,8],'오금역':[3,5],'구파발역':[3],'연신내역':[3,6],'불광역':[3,6],'녹번역':[3],'홍제역':[3],'무악재역':[3],'독립문역':[3],
+    '당고개역':[4],'상계역':[4],'노원역':[4,7],'창동역':[1,4],'쌍문역':[4],'수유역':[4],'미아역':[4],'미아사거리역':[4],'길음역':[4],'성신여대입구역':[4,'우이신설'],'한성대입구역':[4],'혜화역':[4],'명동역':[4],'숙대입구역':[4],'삼각지역':[4,6],'신용산역':[4],'이촌역':[4,'경의중앙'],'동작역':[4,9],'남태령역':[4],'선바위역':[4],'경마공원역':[4],'대공원역':[4],'평촌역':[4],'범계역':[4],'고잔역':[4,'분당'],'안산역':[4,'분당'],'오이도역':[4,'분당'],
+    '방화역':[5],'개화산역':[5],'김포공항역':[5,9,'공항'],'마곡역':[5],'발산역':[5],'우장산역':[5],'화곡역':[5],'까치산역':[5,2],'목동역':[5],'오목교역':[5],'여의도역':[5,9],'여의나루역':[5],'마포역':[5],'공덕역':[5,6,'경의중앙','공항'],'애오개역':[5],'서대문역':[5],'광화문역':[5],'천호역':[5,8],'강동역':[5],'마천역':[5],'올림픽공원역':[5,9],
+    '응암역':[6],'역촌역':[6],'독바위역':[6],'구산역':[6],'새절역':[6],'증산역':[6],'디지털미디어시티역':[6,'경의중앙','공항'],'월드컵경기장역':[6],'마포구청역':[6],'망원역':[6],'상수역':[6],'광흥창역':[6],'대흥역':[6],'효창공원앞역':[6,'경의중앙'],'녹사평역':[6],'이태원역':[6],'한강진역':[6],'버티고개역':[6],'청구역':[5,6],'동묘앞역':[1,6],'창신역':[6],'보문역':[6,'우이신설'],'안암역':[6],'고려대역':[6],'월곡역':[6],'상월곡역':[6],'돌곶이역':[6],'태릉입구역':[6,7],'화랑대역':[6],'봉화산역':[6],'신내역':[6],
+    '장암역':[7],'수락산역':[7],'마들역':[7],'중계역':[7],'하계역':[7],'공릉역':[7],'먹골역':[7],'중화역':[7],'상봉역':[7,'경의중앙'],'면목역':[7],'사가정역':[7],'용마산역':[7],'중곡역':[7],'군자역':[5,7],'어린이대공원역':[7],'뚝섬유원지역':[7],'청담역':[7],'강남구청역':[7],'학동역':[7],'논현역':[7,'신분당'],'반포역':[7],'내방역':[7],'이수역':[4,7],'남성역':[7],'숭실대입구역':[7],'상도역':[7],'장승배기역':[7],'신대방삼거리역':[7],'보라매역':[7],'신풍역':[7],'남구로역':[7],'철산역':[7],'천왕역':[7],'까치울역':[7],'삼산체육관역':[7],'부평구청역':[1,7],
+    '암사역':[8],'강동구청역':[8],'몽촌토성역':[8],'석촌역':[8,9],'송파역':[8],'문정역':[8],'장지역':[8],'복정역':[8,'분당'],'산성역':[8],'남위례역':[8],'단대오거리역':[8],'신흥역':[8],'수진역':[8],'모란역':[8,'분당'],
+    '개화역':[9],'공항시장역':[9],'신방화역':[9],'마곡나루역':[9],'양천향교역':[9],'가양역':[9],'증미역':[9],'등촌역':[9],'염창역':[9],'신목동역':[9],'선유도역':[9],'국회의사당역':[9],'샛강역':[9],'노들역':[9],'흑석역':[9],'구반포역':[9],'신반포역':[9],'사평역':[9],'신논현역':[7,9],'언주역':[9],'선정릉역':[9],'삼성중앙역':[9],'봉은사역':[9],'삼전역':[9],'석촌고분역':[9],'송파나루역':[9],'한성백제역':[9],'둔촌오륜역':[9],'중앙보훈병원역':[9],
+    '능곡역':['경의중앙'],'행신역':['경의중앙'],'수색역':['경의중앙'],'가좌역':['경의중앙'],'서강대역':['경의중앙'],'서빙고역':['경의중앙'],'한남역':['경의중앙'],'응봉역':['경의중앙'],'중랑역':['경의중앙'],'망우역':['경의중앙'],'양원역':['경의중앙'],'구리역':['경의중앙'],'도농역':['경의중앙'],'덕소역':['경의중앙'],'팔당역':['경의중앙'],'운길산역':['경의중앙'],'양수역':['경의중앙'],'국수역':['경의중앙'],
+    '판교역':['신분당'],'동천역':['신분당'],'수지구청역':['신분당'],'성복역':['신분당'],'상현역':['신분당'],'광교중앙역':['신분당'],'광교역':['신분당'],
+    '인천공항1터미널역':['공항'],'인천공항2터미널역':['공항'],'검암역':['공항'],'계양역':['공항'],
+    '북한산우이역':['우이신설'],'솔밭공원역':['우이신설'],'가오리역':['우이신설'],'화계역':['우이신설'],'삼양역':['우이신설'],'삼양사거리역':['우이신설'],'솔샘역':['우이신설'],'북한산보국문역':['우이신설'],'정릉역':['우이신설'],'신설동역':['우이신설'],
+    '한티역':['분당'],'구룡역':['분당'],'개포동역':['분당'],'대모산입구역':['분당'],'가천대역':['분당'],'태평역':['분당'],'죽전역':['분당'],'보정역':['분당'],'기흥역':['분당'],'영통역':['분당'],'망포역':['분당'],'이매역':['분당'],'서현역':['분당'],'수내역':['분당'],'정자역':['분당','신분당'],'미금역':['분당','신분당'],
+    // 추가 누락 환승역
+    '왕십리역':[2,5,'경의중앙'],'충정로역':[2,5],'공덕역':[5,6,'경의중앙','공항'],
+    '까치산역':[2,5],'신당역':[2,6],'을지로3가역':[2,3],'교대역':[2,3],
+    '동대문역사문화공원역':[2,4,5],'동작역':[4,9],'사당역':[2,4],
+    '이수역':[4,7],'노원역':[4,7],'도봉산역':[1,7],'온수역':[1,7],
+    '가산디지털단지역':[1,7],'광명사거리역':[1,7],'철산역':[7],
+    '건대입구역':[2,7],'군자역':[5,7],'태릉입구역':[6,7],
+    '석계역':[1,6],'삼각지역':[4,6],'합정역':[2,6],'약수역':[3,6],
+    '청구역':[5,6],'동묘앞역':[1,6],'연신내역':[3,6],'불광역':[3,6],
+    '가락시장역':[3,8],'잠실역':[2,8],'천호역':[5,8],'석촌역':[8,9],
+    '복정역':[8,'분당'],'모란역':[8,'분당'],
+    '고속터미널역':[3,7,9],'당산역':[2,9],'종합운동장역':[2,9],
+    '여의도역':[5,9],'노량진역':[1,9],'김포공항역':[5,9,'공항'],
+    '신논현역':[7,9],'올림픽공원역':[5,9],
+    '홍대입구역':[2,'경의중앙','공항'],
+    '디지털미디어시티역':[6,'경의중앙','공항'],
+    '옥수역':[3,'경의중앙'],'왕십리역':[2,5,'경의중앙'],
+    '상봉역':[7,'경의중앙'],
+    '성신여대입구역':[4,'우이신설'],'보문역':[6,'우이신설'],
+    '신설동역':[2,'우이신설'],
+    '선릉역':[2,'분당'],'도곡역':[3,'분당'],'수서역':[3,'분당'],
+    '고잔역':[4,'분당'],'안산역':[4,'분당'],'오이도역':[4,'분당'],
+    '강남역':[2,'신분당'],'양재역':[3,'신분당'],'신사역':[3,'신분당'],
+    '논현역':[7,'신분당'],
+    '서울역':[1,4,'경의중앙','공항'],
+    '이촌역':[4,'경의중앙'],'효창공원앞역':[6,'경의중앙'],
+    '용산역':[1,'경의중앙'],
+    '창동역':[1,4],
+  };
+
+  function getStationLines(name) {
+    return STATION_LINES[name] || ['기본'];
+  }
+
+  // 자동완성
+  const searchInput = document.getElementById('searchInput');
+  const autocompleteList = document.getElementById('autocompleteList');
+  let activeIdx = -1;
+
+  function showAutocomplete(query) {
+    if (!query) { autocompleteList.classList.remove('show'); return; }
+    const matches = STATIONS.filter(s => s.includes(query)).slice(0, 8);
+    if (!matches.length) { autocompleteList.classList.remove('show'); return; }
+
+    autocompleteList.innerHTML = matches.map((s, i) => {
+      const lines = getStationLines(s);
+      const icons = lines.map(line => {
+        const color = LINE_COLORS[line] || LINE_COLORS['기본'];
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="18" height="14" rx="3"/><path d="M3 10h18"/><path d="M8 17l-2 4"/><path d="M16 17l2 4"/><circle cx="8.5" cy="6.5" r="1" fill="${color}" stroke="none"/><circle cx="15.5" cy="6.5" r="1" fill="${color}" stroke="none"/></svg>`;
+      }).join('');
+      return `<div class="autocomplete-item" data-idx="${i}" data-name="${s}"><span style="display:flex;gap:2px;flex-shrink:0;">${icons}</span>${s}</div>`;
+    }).join('');
+    autocompleteList.classList.add('show');
+    activeIdx = -1;
+
+    autocompleteList.querySelectorAll('.autocomplete-item').forEach(el => {
+      el.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        searchInput.value = this.dataset.name;
+        autocompleteList.classList.remove('show');
+        doSearch();
+      });
+    });
+  }
+
+  searchInput.addEventListener('input', function() {
+    showAutocomplete(this.value.trim());
+  });
+
+  searchInput.addEventListener('keydown', function(e) {
+    const items = autocompleteList.querySelectorAll('.autocomplete-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIdx = Math.min(activeIdx + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIdx = Math.max(activeIdx - 1, -1);
+      items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+    } else if (e.key === 'Enter') {
+      if (activeIdx >= 0 && items[activeIdx]) {
+        searchInput.value = items[activeIdx].dataset.name;
+        autocompleteList.classList.remove('show');
+      }
+      doSearch();
+    } else if (e.key === 'Escape') {
+      autocompleteList.classList.remove('show');
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-wrap')) autocompleteList.classList.remove('show');
+  });
+
+  // 검색 기능
+  let searchMarker = null;
+
+  function doSearch() {
+    const query = searchInput.value.trim();
+    if (!query) { locateMe(); return; }
+    autocompleteList.classList.remove('show');
+
+    const isStation = STATIONS.includes(query);
+
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + (isStation ? ' 서울' : ''))}&format=json&limit=1&accept-language=ko&countrycodes=kr`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) { alert('주소를 찾을 수 없어요.'); return; }
+        const pos = new naver.maps.LatLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
+
+        if (searchMarker) searchMarker.setMap(null);
+        searchMarker = new naver.maps.Marker({
+          map, position: pos,
+          icon: {
+            content: '<div style="width:16px;height:16px;background:#ff4444;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(255,68,68,0.4);"></div>',
+            anchor: new naver.maps.Point(8, 8),
+          },
+        });
+
+        map.setCenter(pos);
+        map.setZoom(17);
+      })
+      .catch(() => alert('검색 중 오류가 발생했어요.'));
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+
+  // 현재 위치
   let myMarker = null;
-  document.getElementById('locateBtn').addEventListener('click', function () {
+
+  function locateMe() {
     if (!navigator.geolocation) { alert('위치 서비스를 지원하지 않아요.'); return; }
     navigator.geolocation.getCurrentPosition(function (pos) {
       const myPos = new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
@@ -347,9 +599,21 @@
         },
       });
       map.setCenter(myPos);
-      map.setZoom(14);
+      map.setZoom(18);
     }, function () { alert('위치 권한을 확인해주세요.'); });
-  });
+  }
+
+  document.getElementById('locateBtn').addEventListener('click', locateMe);
+
+  function resetMap() {
+    searchInput.value = '';
+    autocompleteList.classList.remove('show');
+    if (searchMarker) { searchMarker.setMap(null); searchMarker = null; }
+    if (myMarker) { myMarker.setMap(null); myMarker = null; }
+    closeInfoWindow();
+    map.setCenter(new naver.maps.LatLng(37.5665, 126.9780));
+    map.setZoom(12);
+  }
 </script>
 
 </body>
