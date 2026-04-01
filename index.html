@@ -279,7 +279,6 @@
 
     /* 모바일 팝업 카드 */
     #mobileCardWrap { display: none; }
-    #mobileCardWrap.show { display: flex; }
     #mobileCard .info-card {
       width: 100% !important;
       padding: 14px 16px;
@@ -373,7 +372,7 @@
 <div id="toast"></div>
 
 <!-- 모바일 팝업 (pointer-events:none 으로 지도 이동 자유) -->
-<div id="mobileCardWrap" style="display:none;position:fixed;inset:0;z-index:501;align-items:center;justify-content:center;padding:20px;pointer-events:none;">
+<div id="mobileCardWrap" style="position:fixed;inset:0;z-index:501;align-items:center;justify-content:center;padding:20px;pointer-events:none;">
   <div id="mobileCard" style="pointer-events:all;width:100%;max-width:300px;"></div>
 </div>
 
@@ -421,13 +420,13 @@
   // X 버튼 공통 닫기
   function closeCurrentCard() {
     closeInfoWindow();
-    document.getElementById('mobileCardWrap').classList.remove('show');
+    document.getElementById('mobileCardWrap').style.display = 'none';
   }
 
   function showMobileCard(html) {
     const card = document.getElementById('mobileCard');
     card.innerHTML = html.replace(/onclick="closeInfoWindow\(\)"/g, 'onclick="closeCurrentCard()"');
-    document.getElementById('mobileCardWrap').classList.add('show');
+    document.getElementById('mobileCardWrap').style.display = 'flex';
   }
 
   function parseCSV(text) {
