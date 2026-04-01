@@ -410,9 +410,15 @@
 
   function showMobileCard(html) {
     const card = document.getElementById('mobileCard');
-    // InfoWindow HTML의 closeInfoWindow → closeCurrentCard로 교체
     card.innerHTML = html.replace(/onclick="closeInfoWindow\(\)"/g, 'onclick="closeCurrentCard()"');
     card.style.display = 'block';
+    // 헤더 높이 제외하고 남은 영역 정중앙에 배치
+    const headerH = document.querySelector('header').offsetHeight;
+    const availH = window.innerHeight - headerH;
+    const cardH = card.offsetHeight;
+    card.style.top = (headerH + (availH - cardH) / 2) + 'px';
+    card.style.left = '50%';
+    card.style.transform = 'translateX(-50%)';
   }
 
   function parseCSV(text) {
