@@ -341,12 +341,6 @@
     #bottomPanel.expanded { height: 86vh; }
 
     /* 공통 패널 스타일 */
-    .panel-handle {
-      width: 36px; height: 4px;
-      background: #ddd; border-radius: 2px;
-      margin: 10px auto 6px;
-      cursor: grab; flex-shrink: 0;
-    }
     .panel-header {
       display: flex;
       align-items: center;
@@ -367,11 +361,18 @@
     }
     .panel-close {
       background: none; border: none;
-      font-size: 18px; color: #bbb;
+      font-size: 24px; color: #bbb;
       cursor: pointer; line-height: 1;
-      padding: 0;
+      padding: 0 0 0 8px;
+      font-weight: 300;
     }
-    .panel-close:hover { color: #333; }
+    .panel-close:hover { color: #0072e3; }
+    /* 바텀 시트 handle 터치 영역 */
+    .panel-handle {
+      padding: 12px 0 6px;
+      cursor: grab;
+      flex-shrink: 0;
+    }
     .panel-list {
       overflow-y: auto;
       flex: 1;
@@ -470,20 +471,21 @@
       <div class="panel-title">내 근처 센터</div>
       <div class="panel-subtitle" id="sidePanelSub"></div>
     </div>
-    <button class="panel-close" onclick="closeNearbyPanel()">✕</button>
+    <button class="panel-close" onclick="closeNearbyPanel()" title="닫기">›</button>
   </div>
   <div class="panel-list" id="sidePanelList"></div>
 </div>
 
 <!-- 모바일 바텀 시트 -->
 <div id="bottomPanel">
-  <div class="panel-handle" id="bottomHandle"></div>
+  <div class="panel-handle" id="bottomHandle">
+    <div style="width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto;"></div>
+  </div>
   <div class="panel-header">
     <div>
       <div class="panel-title">내 근처 센터</div>
       <div class="panel-subtitle" id="bottomPanelSub"></div>
     </div>
-    <button class="panel-close" onclick="closeNearbyPanel()">✕</button>
   </div>
   <div class="panel-list" id="bottomPanelList"></div>
 </div>
@@ -867,10 +869,25 @@
   }
 
   // ── 근처 센터 패널 ──
+  // 모바일 바텀시트 상태: hidden / peek(64px) / half(52vh) / expanded(86vh)
+  const bottomPanel = document.getElementById('bottomPanel');
+
+  function setBottomState(state) {
+    const heights = { peek: '64px', half: '52vh', expanded: '86vh' };
+    if (state === 'hidden') {
+      bottomPanel.style.display = 'none';
+    } else {
+      bottomPanel.style.display = 'flex';
+      bottomPanel.style.height = heights[state];
+    }
+    bottomPanel.dataset.state = state;
+  }
+
   function showNearbyPanel(myLat, myLng) {
     const sorted = centerMarkers
       .map(c => ({ ...c, dist: calcDistance(myLat, myLng, c.position.lat(), c.position.lng()) }))
-      .sort((a, b) => a.dist - b.dist);
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 10);
 
     const listHtml = sorted.map(c =>
       `<div class="panel-item" data-name="${c.name}">
@@ -879,7 +896,7 @@
       </div>`
     ).join('');
 
-    const subtitle = `총 ${sorted.length}개 센터`;
+    const subtitle = `가까운 순 ${sorted.length}개`;
 
     if (window.innerWidth > 768) {
       document.getElementById('sidePanelList').innerHTML = listHtml;
@@ -888,12 +905,16 @@
     } else {
       document.getElementById('bottomPanelList').innerHTML = listHtml;
       document.getElementById('bottomPanelSub').textContent = subtitle;
-      document.getElementById('bottomPanel').classList.add('show');
+      setBottomState('half');
     }
 
     document.querySelectorAll('.panel-item').forEach(el => {
       el.addEventListener('click', function() {
-        closeNearbyPanel();
+        if (window.innerWidth > 768) {
+          document.getElementById('sidePanel').classList.remove('show');
+        } else {
+          setBottomState('peek');
+        }
         openCenterByName(this.dataset.name);
       });
     });
@@ -901,19 +922,28 @@
 
   function closeNearbyPanel() {
     document.getElementById('sidePanel').classList.remove('show');
-    document.getElementById('bottomPanel').classList.remove('show', 'expanded');
+    setBottomState('hidden');
   }
 
-  // 바텀 시트 드래그로 펼치기/접기
+  // 바텀 시트 드래그: peek ↔ half ↔ expanded
   (function() {
-    const panel = document.getElementById('bottomPanel');
     const handle = document.getElementById('bottomHandle');
     let startY = 0;
     handle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
     handle.addEventListener('touchend', e => {
       const diff = startY - e.changedTouches[0].clientY;
-      if (diff > 40) panel.classList.add('expanded');
-      else if (diff < -40) panel.classList.remove('expanded');
+      const state = bottomPanel.dataset.state || 'half';
+      if (diff > 40) { // 위로 드래그
+        if (state === 'peek') setBottomState('half');
+        else if (state === 'half') setBottomState('expanded');
+      } else if (diff < -40) { // 아래로 드래그
+        if (state === 'expanded') setBottomState('half');
+        else if (state === 'half') setBottomState('peek');
+      }
+    });
+    // peek 상태에서 handle 탭하면 half로
+    handle.addEventListener('click', () => {
+      if ((bottomPanel.dataset.state || '') === 'peek') setBottomState('half');
     });
   })();
 
@@ -932,7 +962,7 @@
         },
       });
       map.setCenter(myPos);
-      map.setZoom(14);
+      map.setZoom(18);
       showNearbyPanel(lat, lng);
     }, function () { showToast('위치 권한을 확인해주세요.'); });
   }
