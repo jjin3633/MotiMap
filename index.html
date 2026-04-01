@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Inter:wght@700&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     body {
       font-family: 'Questrial', sans-serif;
@@ -262,6 +263,39 @@
 
     .info-card .btn-place:hover { background: #005bbf; }
 
+    /* 검색창 X 버튼 */
+    #clearBtn {
+      background: none;
+      border: none;
+      padding: 0 8px;
+      cursor: pointer;
+      color: #bbb;
+      font-size: 16px;
+      line-height: 1;
+      display: none;
+      flex-shrink: 0;
+    }
+    #clearBtn:hover { color: #555; }
+
+    /* 토스트 메시지 */
+    #toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: rgba(20,20,20,0.88);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* 반응형 */
     @media (max-width: 768px) {
       header {
@@ -286,10 +320,6 @@
       }
       .search-bar { width: 100%; }
       .autocomplete-list { position: fixed; left: 16px; right: 16px; top: auto; width: auto; }
-
-      /* 검색창 포커스 시 로고 숨김 */
-      header.search-focused .header-left { display: none; }
-      header.search-focused { padding: 8px 16px; gap: 0; }
     }
 
     @media (max-width: 480px) {
@@ -309,9 +339,13 @@
     <div class="search-wrap">
       <div class="search-bar">
         <input type="text" id="searchInput" placeholder="역이름 또는 주소 입력 (예: 홍대입구역)" autocomplete="off" />
+        <button id="clearBtn" type="button" aria-label="지우기">✕</button>
         <button id="searchBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="searchIcon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <svg id="searchSpinner" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;animation:spin 0.7s linear infinite;">
+            <path d="M12 2a10 10 0 0 1 10 10"/>
           </svg>
         </button>
       </div>
@@ -321,6 +355,12 @@
 </header>
 
 <div id="map"></div>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<!-- 모바일 팝업 (오버레이 없음 - 지도 이동 자유) -->
+<div id="mobileCard" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:501;width:calc(100vw - 40px);max-width:340px;"></div>
 
 <button id="locateBtn" title="현재 위치">
   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -342,8 +382,37 @@
 
   let currentInfoWindow = null;
 
+  // 토스트
+  function showToast(msg, ms = 2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), ms);
+  }
+
+  // 검색 로딩
+  function setSearchLoading(on) {
+    document.getElementById('searchIcon').style.display = on ? 'none' : '';
+    document.getElementById('searchSpinner').style.display = on ? '' : 'none';
+    document.getElementById('searchBtn').disabled = on;
+  }
+
   function closeInfoWindow() {
     if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+  }
+
+  // X 버튼 공통 닫기 (데스크톱 InfoWindow + 모바일 카드 둘 다)
+  function closeCurrentCard() {
+    closeInfoWindow();
+    document.getElementById('mobileCard').style.display = 'none';
+  }
+
+  function showMobileCard(html) {
+    const card = document.getElementById('mobileCard');
+    // InfoWindow HTML의 closeInfoWindow → closeCurrentCard로 교체
+    card.innerHTML = html.replace(/onclick="closeInfoWindow\(\)"/g, 'onclick="closeCurrentCard()"');
+    card.style.display = 'block';
   }
 
   function parseCSV(text) {
@@ -418,9 +487,16 @@
     });
 
     naver.maps.Event.addListener(marker, 'click', function () {
-      if (currentInfoWindow) currentInfoWindow.close();
-      infoWindow.open(map, marker);
-      currentInfoWindow = infoWindow;
+      if (window.innerWidth <= 768) {
+        // 모바일: 화면 중앙 팝업
+        closeInfoWindow();
+        showMobileCard(infoWindow.getContent());
+      } else {
+        // 데스크톱: 마커 옆 팝업
+        if (currentInfoWindow) currentInfoWindow.close();
+        infoWindow.open(map, marker);
+        currentInfoWindow = infoWindow;
+      }
     });
   }
 
@@ -430,10 +506,11 @@
       const centers = parseCSV(text).filter(c => c.lat && c.lng);
       centers.forEach(addMarker);
     })
-    .catch(() => alert('센터 데이터를 불러오지 못했어요.'));
+    .catch(() => showToast('센터 데이터를 불러오지 못했어요.'));
 
-  naver.maps.Event.addListener(map, 'click', function () {
-    if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+  naver.maps.Event.addListener(map, 'click', closeCurrentCard);
+  naver.maps.Event.addListener(map, 'dragstart', function () {
+    document.getElementById('mobileCard').style.display = 'none';
   });
 
   // 500m 이상 줌인 시 센터명 표시 (zoom >= 14)
@@ -473,34 +550,6 @@
     '인천공항1터미널역':['공항'],'인천공항2터미널역':['공항'],'검암역':['공항'],'계양역':['공항'],
     '북한산우이역':['우이신설'],'솔밭공원역':['우이신설'],'가오리역':['우이신설'],'화계역':['우이신설'],'삼양역':['우이신설'],'삼양사거리역':['우이신설'],'솔샘역':['우이신설'],'북한산보국문역':['우이신설'],'정릉역':['우이신설'],'신설동역':['우이신설'],
     '한티역':['분당'],'구룡역':['분당'],'개포동역':['분당'],'대모산입구역':['분당'],'가천대역':['분당'],'태평역':['분당'],'죽전역':['분당'],'보정역':['분당'],'기흥역':['분당'],'영통역':['분당'],'망포역':['분당'],'이매역':['분당'],'서현역':['분당'],'수내역':['분당'],'정자역':['분당','신분당'],'미금역':['분당','신분당'],
-    // 추가 누락 환승역
-    '왕십리역':[2,5,'경의중앙'],'충정로역':[2,5],'공덕역':[5,6,'경의중앙','공항'],
-    '까치산역':[2,5],'신당역':[2,6],'을지로3가역':[2,3],'교대역':[2,3],
-    '동대문역사문화공원역':[2,4,5],'동작역':[4,9],'사당역':[2,4],
-    '이수역':[4,7],'노원역':[4,7],'도봉산역':[1,7],'온수역':[1,7],
-    '가산디지털단지역':[1,7],'광명사거리역':[1,7],'철산역':[7],
-    '건대입구역':[2,7],'군자역':[5,7],'태릉입구역':[6,7],
-    '석계역':[1,6],'삼각지역':[4,6],'합정역':[2,6],'약수역':[3,6],
-    '청구역':[5,6],'동묘앞역':[1,6],'연신내역':[3,6],'불광역':[3,6],
-    '가락시장역':[3,8],'잠실역':[2,8],'천호역':[5,8],'석촌역':[8,9],
-    '복정역':[8,'분당'],'모란역':[8,'분당'],
-    '고속터미널역':[3,7,9],'당산역':[2,9],'종합운동장역':[2,9],
-    '여의도역':[5,9],'노량진역':[1,9],'김포공항역':[5,9,'공항'],
-    '신논현역':[7,9],'올림픽공원역':[5,9],
-    '홍대입구역':[2,'경의중앙','공항'],
-    '디지털미디어시티역':[6,'경의중앙','공항'],
-    '옥수역':[3,'경의중앙'],'왕십리역':[2,5,'경의중앙'],
-    '상봉역':[7,'경의중앙'],
-    '성신여대입구역':[4,'우이신설'],'보문역':[6,'우이신설'],
-    '신설동역':[2,'우이신설'],
-    '선릉역':[2,'분당'],'도곡역':[3,'분당'],'수서역':[3,'분당'],
-    '고잔역':[4,'분당'],'안산역':[4,'분당'],'오이도역':[4,'분당'],
-    '강남역':[2,'신분당'],'양재역':[3,'신분당'],'신사역':[3,'신분당'],
-    '논현역':[7,'신분당'],
-    '서울역':[1,4,'경의중앙','공항'],
-    '이촌역':[4,'경의중앙'],'효창공원앞역':[6,'경의중앙'],
-    '용산역':[1,'경의중앙'],
-    '창동역':[1,4],
   };
 
   function getStationLines(name) {
@@ -538,19 +587,19 @@
     });
   }
 
-  // 모바일: 검색창 포커스 시 로고 숨김
-  const headerEl = document.querySelector('header');
-  searchInput.addEventListener('focus', function() {
-    if (window.innerWidth <= 768) headerEl.classList.add('search-focused');
-  });
-  searchInput.addEventListener('blur', function() {
-    headerEl.classList.remove('search-focused');
-    // 키보드 닫힌 후 내 위치 버튼 강제 재표시
-    setTimeout(() => { document.getElementById('locateBtn').style.display = 'flex'; }, 100);
-  });
-
+  // X 버튼
+  const clearBtn = document.getElementById('clearBtn');
   searchInput.addEventListener('input', function() {
-    showAutocomplete(this.value.trim());
+    const v = this.value.trim();
+    clearBtn.style.display = v ? 'block' : 'none';
+    showAutocomplete(v);
+  });
+  clearBtn.addEventListener('click', function() {
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+    autocompleteList.classList.remove('show');
+    searchInput.focus();
+    if (searchMarker) { searchMarker.setMap(null); searchMarker = null; }
   });
 
   searchInput.addEventListener('keydown', function(e) {
@@ -583,30 +632,31 @@
 
   function doSearch() {
     const query = searchInput.value.trim();
-    if (!query) { locateMe(); return; }
+    if (!query) return;
     autocompleteList.classList.remove('show');
+    searchInput.blur(); // 모바일 키보드 닫기
 
     const isStation = STATIONS.includes(query);
+    setSearchLoading(true);
 
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + (isStation ? ' 서울' : ''))}&format=json&limit=1&accept-language=ko&countrycodes=kr`)
       .then(res => res.json())
       .then(data => {
-        if (!data.length) { alert('주소를 찾을 수 없어요.'); return; }
+        if (!data.length) { showToast('주소를 찾을 수 없어요.'); return; }
         const pos = new naver.maps.LatLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
-
         if (searchMarker) searchMarker.setMap(null);
         searchMarker = new naver.maps.Marker({
           map, position: pos,
           icon: {
-            content: '<div style="width:16px;height:16px;background:#ff4444;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(255,68,68,0.4);"></div>',
-            anchor: new naver.maps.Point(8, 8),
+            content: '<div style="width:14px;height:14px;background:#ff4444;border:2px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(255,68,68,0.4);"></div>',
+            anchor: new naver.maps.Point(7, 7),
           },
         });
-
         map.setCenter(pos);
         map.setZoom(17);
       })
-      .catch(() => alert('검색 중 오류가 발생했어요.'));
+      .catch(() => showToast('검색 중 오류가 발생했어요.'))
+      .finally(() => setSearchLoading(false));
   }
 
   document.getElementById('searchBtn').addEventListener('click', doSearch);
@@ -615,7 +665,7 @@
   let myMarker = null;
 
   function locateMe() {
-    if (!navigator.geolocation) { alert('위치 서비스를 지원하지 않아요.'); return; }
+    if (!navigator.geolocation) { showToast('위치 서비스를 지원하지 않아요.'); return; }
     navigator.geolocation.getCurrentPosition(function (pos) {
       const myPos = new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
       if (myMarker) myMarker.setMap(null);
@@ -628,7 +678,7 @@
       });
       map.setCenter(myPos);
       map.setZoom(18);
-    }, function () { alert('위치 권한을 확인해주세요.'); });
+    }, function () { showToast('위치 권한을 확인해주세요.'); });
   }
 
   document.getElementById('locateBtn').addEventListener('click', locateMe);
