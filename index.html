@@ -913,11 +913,16 @@
   // 모바일: hidden / peek(28px) / half(52vh) / expanded(86vh)
   function setBottomState(state) {
     const heights = { peek: '28px', half: '52vh', expanded: '86vh' };
+    const locateBtn = document.getElementById('locateBtn');
     if (state === 'hidden') {
       bottomPanel.style.display = 'none';
+      locateBtn.style.bottom = '';
     } else {
       bottomPanel.style.display = 'flex';
       bottomPanel.style.height = heights[state];
+      // 내 위치 버튼이 패널과 겹치지 않도록 패널 높이 + 여유 12px
+      const panelH = state === 'peek' ? 28 : state === 'half' ? window.innerHeight * 0.52 : window.innerHeight * 0.86;
+      locateBtn.style.bottom = (panelH + 12) + 'px';
     }
     bottomPanel.dataset.state = state;
   }
