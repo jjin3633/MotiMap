@@ -321,8 +321,32 @@
       z-index: 200;
       display: none;
       flex-direction: column;
+      transition: transform 0.25s ease;
     }
     #sidePanel.show { display: flex; }
+
+    /* 패널 좌측 중앙 토글 버튼 */
+    #sidePanelToggle {
+      position: absolute;
+      left: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 50%;
+      box-shadow: -2px 2px 8px rgba(0,0,0,0.12);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #555;
+      z-index: 201;
+      transition: background 0.15s, color 0.15s;
+    }
+    #sidePanelToggle:hover { background: #0072e3; color: #fff; border-color: #0072e3; }
 
     /* ── 모바일 바텀 시트 ── */
     #bottomPanel {
@@ -336,9 +360,11 @@
       display: none;
       flex-direction: column;
       transition: height 0.3s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
     }
-    #bottomPanel.show { display: flex; }
-    #bottomPanel.expanded { height: 86vh; }
+    /* peek 상태: 핸들만 보임 */
+    #bottomPanel[data-state="peek"] .panel-header,
+    #bottomPanel[data-state="peek"] .panel-list { display: none; }
 
     /* 공통 패널 스타일 */
     .panel-header {
@@ -466,12 +492,12 @@
 
 <!-- 데스크톱 사이드 패널 -->
 <div id="sidePanel">
+  <button id="sidePanelToggle" onclick="toggleSidePanel()">›</button>
   <div class="panel-header">
     <div>
       <div class="panel-title">내 근처 센터</div>
       <div class="panel-subtitle" id="sidePanelSub"></div>
     </div>
-    <button class="panel-close" onclick="closeNearbyPanel()" title="닫기">›</button>
   </div>
   <div class="panel-list" id="sidePanelList"></div>
 </div>
@@ -658,7 +684,13 @@
     .catch(() => showToast('센터 데이터를 불러오지 못했어요.'));
 
   naver.maps.Event.addListener(map, 'click', closeCurrentCard);
-  naver.maps.Event.addListener(map, 'dragstart', closeCurrentCard);
+  naver.maps.Event.addListener(map, 'dragstart', function() {
+    closeCurrentCard();
+    // 모바일: 지도 이동 시 바텀패널 닫기
+    if (window.innerWidth <= 768) setBottomState('hidden');
+    // PC: 지도 이동 시 사이드패널 접기
+    else closeSidePanel();
+  });
 
   // 500m 이상 줌인 시 센터명 표시 (zoom >= 14)
   const mapEl = document.getElementById('map');
@@ -869,11 +901,13 @@
   }
 
   // ── 근처 센터 패널 ──
-  // 모바일 바텀시트 상태: hidden / peek(64px) / half(52vh) / expanded(86vh)
   const bottomPanel = document.getElementById('bottomPanel');
+  const sidePanel   = document.getElementById('sidePanel');
+  const toggleBtn   = document.getElementById('sidePanelToggle');
 
+  // 모바일: hidden / peek(28px) / half(52vh) / expanded(86vh)
   function setBottomState(state) {
-    const heights = { peek: '64px', half: '52vh', expanded: '86vh' };
+    const heights = { peek: '28px', half: '52vh', expanded: '86vh' };
     if (state === 'hidden') {
       bottomPanel.style.display = 'none';
     } else {
@@ -883,35 +917,34 @@
     bottomPanel.dataset.state = state;
   }
 
-  function showNearbyPanel(myLat, myLng) {
-    const sorted = centerMarkers
-      .map(c => ({ ...c, dist: calcDistance(myLat, myLng, c.position.lat(), c.position.lng()) }))
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 10);
+  // PC: 패널 열기/닫기 + 토글 버튼 방향
+  function openSidePanel() {
+    sidePanel.classList.add('show');
+    toggleBtn.textContent = '›';
+  }
+  function closeSidePanel() {
+    sidePanel.classList.remove('show');
+    toggleBtn.textContent = '‹';
+  }
+  function toggleSidePanel() {
+    if (sidePanel.classList.contains('show')) closeSidePanel();
+    else openSidePanel();
+  }
 
-    const listHtml = sorted.map(c =>
+  function buildListHtml(sorted) {
+    return sorted.map(c =>
       `<div class="panel-item" data-name="${c.name}">
         <span class="panel-item-name">${c.name}</span>
         <span class="panel-item-dist">${formatDist(c.dist)}</span>
       </div>`
     ).join('');
+  }
 
-    const subtitle = `가까운 순 ${sorted.length}개`;
-
-    if (window.innerWidth > 768) {
-      document.getElementById('sidePanelList').innerHTML = listHtml;
-      document.getElementById('sidePanelSub').textContent = subtitle;
-      document.getElementById('sidePanel').classList.add('show');
-    } else {
-      document.getElementById('bottomPanelList').innerHTML = listHtml;
-      document.getElementById('bottomPanelSub').textContent = subtitle;
-      setBottomState('half');
-    }
-
-    document.querySelectorAll('.panel-item').forEach(el => {
+  function bindPanelItems(containerId) {
+    document.querySelectorAll(`#${containerId} .panel-item`).forEach(el => {
       el.addEventListener('click', function() {
         if (window.innerWidth > 768) {
-          document.getElementById('sidePanel').classList.remove('show');
+          // PC: 패널 유지, 센터 선택만
         } else {
           setBottomState('peek');
         }
@@ -920,12 +953,42 @@
     });
   }
 
+  function showNearbyPanel(myLat, myLng) {
+    const sorted = centerMarkers
+      .map(c => ({ ...c, dist: calcDistance(myLat, myLng, c.position.lat(), c.position.lng()) }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 10);
+
+    const subtitle = `가까운 순 ${sorted.length}개`;
+
+    if (window.innerWidth > 768) {
+      document.getElementById('sidePanelList').innerHTML = buildListHtml(sorted);
+      document.getElementById('sidePanelSub').textContent = subtitle;
+      openSidePanel();
+      bindPanelItems('sidePanelList');
+    } else {
+      document.getElementById('bottomPanelList').innerHTML = buildListHtml(sorted);
+      document.getElementById('bottomPanelSub').textContent = subtitle;
+      // 내 위치가 패널에 가리지 않도록 지도 중심을 살짝 위로
+      const mapH = document.getElementById('map').offsetHeight;
+      const panelH = mapH * 0.52;
+      const offset = panelH / 2;
+      const proj = map.getProjection();
+      const center = map.getCenter();
+      const point = proj.fromCoordToOffset(center);
+      point.y -= offset / 2;
+      map.setCenter(proj.fromOffsetToCoord(point));
+      setBottomState('half');
+      bindPanelItems('bottomPanelList');
+    }
+  }
+
   function closeNearbyPanel() {
-    document.getElementById('sidePanel').classList.remove('show');
+    closeSidePanel();
     setBottomState('hidden');
   }
 
-  // 바텀 시트 드래그: peek ↔ half ↔ expanded
+  // 바텀시트 드래그
   (function() {
     const handle = document.getElementById('bottomHandle');
     let startY = 0;
@@ -933,17 +996,18 @@
     handle.addEventListener('touchend', e => {
       const diff = startY - e.changedTouches[0].clientY;
       const state = bottomPanel.dataset.state || 'half';
-      if (diff > 40) { // 위로 드래그
+      if (diff > 40) {
         if (state === 'peek') setBottomState('half');
         else if (state === 'half') setBottomState('expanded');
-      } else if (diff < -40) { // 아래로 드래그
+      } else if (diff < -40) {
         if (state === 'expanded') setBottomState('half');
         else if (state === 'half') setBottomState('peek');
+        else if (state === 'peek') setBottomState('hidden');
       }
     });
-    // peek 상태에서 handle 탭하면 half로
     handle.addEventListener('click', () => {
-      if ((bottomPanel.dataset.state || '') === 'peek') setBottomState('half');
+      const state = bottomPanel.dataset.state || 'half';
+      if (state === 'peek') setBottomState('half');
     });
   })();
 
