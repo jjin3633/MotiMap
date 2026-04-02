@@ -325,28 +325,31 @@
     }
     #sidePanel.show { display: flex; }
 
-    /* 패널 좌측 중앙 토글 버튼 */
+    /* 패널 좌측 중앙 토글 버튼 - 항상 표시 */
     #sidePanelToggle {
-      position: absolute;
-      left: -16px;
+      position: fixed;
+      right: 0;
       top: 50%;
       transform: translateY(-50%);
       width: 32px;
       height: 32px;
       background: #fff;
       border: 1px solid #e5e5e5;
-      border-radius: 50%;
+      border-right: none;
+      border-radius: 50% 0 0 50%;
       box-shadow: -2px 2px 8px rgba(0,0,0,0.12);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 18px;
       color: #555;
       z-index: 201;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, color 0.15s, right 0.25s ease;
     }
+    #sidePanelToggle.panel-open { right: 300px; }
     #sidePanelToggle:hover { background: #0072e3; color: #fff; border-color: #0072e3; }
+    @media (max-width: 768px) { #sidePanelToggle { display: none; } }
 
     /* ── 모바일 바텀 시트 ── */
     #bottomPanel {
@@ -490,9 +493,11 @@
 <!-- 토스트 -->
 <div id="toast"></div>
 
+<!-- 데스크톱 사이드 패널 토글 버튼 (패널 바깥) -->
+<button id="sidePanelToggle" onclick="toggleSidePanel()">›</button>
+
 <!-- 데스크톱 사이드 패널 -->
 <div id="sidePanel">
-  <button id="sidePanelToggle" onclick="toggleSidePanel()">›</button>
   <div class="panel-header">
     <div>
       <div class="panel-title">내 근처 센터</div>
@@ -917,13 +922,15 @@
     bottomPanel.dataset.state = state;
   }
 
-  // PC: 패널 열기/닫기 + 토글 버튼 방향
+  // PC: 패널 열기/닫기 + 토글 버튼
   function openSidePanel() {
     sidePanel.classList.add('show');
+    toggleBtn.classList.add('panel-open');
     toggleBtn.textContent = '›';
   }
   function closeSidePanel() {
     sidePanel.classList.remove('show');
+    toggleBtn.classList.remove('panel-open');
     toggleBtn.textContent = '‹';
   }
   function toggleSidePanel() {
@@ -969,15 +976,9 @@
     } else {
       document.getElementById('bottomPanelList').innerHTML = buildListHtml(sorted);
       document.getElementById('bottomPanelSub').textContent = subtitle;
-      // 내 위치가 패널에 가리지 않도록 지도 중심을 살짝 위로
-      const mapH = document.getElementById('map').offsetHeight;
-      const panelH = mapH * 0.52;
-      const offset = panelH / 2;
-      const proj = map.getProjection();
-      const center = map.getCenter();
-      const point = proj.fromCoordToOffset(center);
-      point.y -= offset / 2;
-      map.setCenter(proj.fromOffsetToCoord(point));
+      // 내 위치가 패널(52vh)에 가리지 않도록 지도 중심을 패널 높이의 절반만큼 위로 이동
+      const panelPx = window.innerHeight * 0.52;
+      map.panBy(new naver.maps.Point(0, Math.round(panelPx / 2)));
       setBottomState('half');
       bindPanelItems('bottomPanelList');
     }
