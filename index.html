@@ -263,6 +263,10 @@
 
     .info-card .btn-place:hover { background: #005bbf; }
 
+    /* 네이버 InfoWindow 꼬리 제거 */
+    .naver-infowindow-tail { display: none !important; }
+    .naver-infowindow-content-wrapper { box-shadow: none !important; }
+
     /* 검색창 X 버튼 */
     #clearBtn {
       background: none;
@@ -647,7 +651,7 @@
       `,
       borderWidth: 0,
       backgroundColor: 'transparent',
-      pixelOffset: new naver.maps.Point(0, -36),
+      pixelOffset: new naver.maps.Point(0, -26),
     });
 
     naver.maps.Event.addListener(marker, 'click', function () {
