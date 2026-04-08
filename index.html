@@ -205,6 +205,9 @@
       font-size: 16px;
       font-weight: 700;
       color: #080808;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       letter-spacing: -0.3px;
     }
 
@@ -460,10 +463,233 @@
       .autocomplete-list { position: fixed; left: 16px; right: 16px; top: auto; width: auto; }
     }
 
-    @media (max-width: 480px) {
-      header h1 { font-size: 17px; }
-      .info-card { width: calc(100vw - 24px); }
+    /* 태블릿 (769px ~ 1024px) */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      header h1 { font-size: 18px; }
+      .search-bar input { font-size: 13px; }
+      .info-card h3 { font-size: 15px; }
+      .info-card { width: 300px; font-size: 12px; }
+      .panel-title { font-size: 13px; }
+      .panel-item-name { font-size: 13px; }
+    }
+
+    /* 모바일 소형 (max 375px) */
+    @media (max-width: 375px) {
+      header h1 { font-size: 16px; }
+      .search-bar input { font-size: 13px; }
+      .info-card { width: calc(100vw - 24px); font-size: 12px; }
+      .info-card h3 { font-size: 14px; }
+      .info-card .btn-place { font-size: 12px; }
       #locateBtn { bottom: 20px; right: 12px; width: 44px; height: 44px; }
+      .register-fab { bottom: 76px; right: 12px; font-size: 12px; padding: 9px 14px; }
+      .modal h2 { font-size: 16px; }
+      .modal input { font-size: 13px; }
+      .panel-title { font-size: 13px; }
+      .panel-item-name { font-size: 13px; }
+      .panel-item-dist { font-size: 11px; }
+    }
+
+    /* 센터 등록 버튼 */
+    .register-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0072e3;
+      color: #fff;
+      font-family: 'Questrial', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .register-btn:hover { background: #005bbf; }
+
+    /* 등록 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 440px;
+      margin: 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Questrial', sans-serif;
+      color: #080808;
+      margin-bottom: 6px;
+    }
+
+    .modal .modal-desc {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .modal .field {
+      margin-bottom: 16px;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    .modal label .required {
+      color: #e03;
+      margin-left: 2px;
+    }
+
+    .modal label .optional {
+      font-size: 11px;
+      color: #aaa;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    .modal input {
+      width: 100%;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: 'Questrial', sans-serif;
+      color: #080808;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .modal input:focus { border-color: #0072e3; }
+    .modal input::placeholder { color: #bbb; }
+
+    .modal .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .modal .btn-cancel {
+      flex: 1;
+      padding: 11px 0;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      background: #fff;
+      font-family: 'Questrial', sans-serif;
+      font-size: 14px;
+      color: #555;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .modal .btn-cancel:hover { background: #f5f5f5; }
+
+    .modal .btn-submit {
+      flex: 2;
+      padding: 11px 0;
+      border: none;
+      border-radius: 8px;
+      background: #0072e3;
+      font-family: 'Questrial', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .modal .btn-submit:hover { background: #005bbf; }
+    .modal .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+
+    .modal .modal-success {
+      display: none;
+      text-align: center;
+      padding: 16px 0;
+    }
+    .modal .modal-success .success-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+    .modal .modal-success h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal .modal-success p {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 768px) {
+      /* 헤더에서 숨기고 FAB으로 대체 */
+      .register-btn { display: none; }
+
+      /* 지도 위 플로팅 버튼 */
+      .register-fab {
+        display: flex;
+        position: fixed;
+        bottom: 96px;
+        right: 20px;
+        z-index: 100;
+        align-items: center;
+        gap: 6px;
+        background: #0072e3;
+        color: #fff;
+        font-family: 'Questrial', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 4px 16px rgba(0,114,227,0.4);
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+      .register-fab:active { transform: scale(0.96); }
+    }
+
+    @media (min-width: 769px) {
+      .register-fab { display: none; }
+    }
+
+    /* 인증 뱃지 */
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: #E8F5E9;
+      color: #2E7D32;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #A5D6A7;
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1;
     }
   </style>
 </head>
@@ -474,6 +700,10 @@
     <div class="header-left" style="cursor:pointer;" onclick="resetMap()">
       <h1>Moti Map</h1>
     </div>
+    <button class="register-btn" onclick="openRegisterModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>센터 등록</span>
+    </button>
     <div class="search-wrap">
       <div class="search-bar">
         <input type="text" id="searchInput" placeholder="역이름 또는 주소 입력 (예: 홍대입구역)" autocomplete="off" />
@@ -491,6 +721,47 @@
     </div>
   </div>
 </header>
+
+<!-- 센터 등록 모달 -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal">
+    <div id="modalForm">
+      <h2>센터 등록</h2>
+      <p class="modal-desc">검토 후 3~5일 이내에 모티맵에 등록됩니다.</p>
+
+      <div class="field">
+        <label>센터명 <span class="required">*</span></label>
+        <input type="text" id="reg_name" placeholder="예: 모티 필라테스"/>
+      </div>
+      <div class="field">
+        <label>센터 주소 <span class="required">*</span></label>
+        <input type="text" id="reg_address" placeholder="예: 서울특별시 마포구 동교로 23길 10, 1층,5층 모티피지오" />
+      </div>
+      <div class="field">
+        <label>인스타그램 주소 <span class="optional"></span></label>
+        <input type="text" id="reg_instagram" placeholder="예: https://instagram.com/myfitness" />
+      </div>
+      <div class="field">
+        <label>홈페이지 / 블로그 <span class="optional"></span></label>
+        <input type="text" id="reg_website" placeholder="예: https://blog.naver.com/myfitness" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeRegisterModal()">취소</button>
+        <button class="btn-submit" id="submitBtn" onclick="submitRegister()">등록 신청</button>
+      </div>
+    </div>
+
+    <div class="modal-success" id="modalSuccess">
+      <div class="success-icon">✅</div>
+      <h3>신청이 완료됐어요!</h3>
+      <p>검토 후 3~5일 이내에<br>모티맵에 등록됩니다.<br><br>감사합니다 🙏</p>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-submit" onclick="closeRegisterModal()">확인</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="map"></div>
 
@@ -529,6 +800,11 @@
 <div id="mobileCardWrap" style="position:fixed;inset:0;z-index:501;align-items:center;justify-content:center;padding:20px;pointer-events:none;">
   <div id="mobileCard" style="pointer-events:all;width:100%;max-width:300px;"></div>
 </div>
+
+<button class="register-fab" onclick="openRegisterModal()">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  센터 등록
+</button>
 
 <button id="locateBtn" title="현재 위치">
   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -635,11 +911,16 @@
 
     const placeUrl = center.placeurl || '';
 
+    const isVerified = String(center.verified || '').trim() === '인증센터';
+    const verifiedBadge = isVerified
+      ? `<span class="verified-badge">✔ 인증 센터</span>`
+      : '';
+
     const infoWindow = new naver.maps.InfoWindow({
       content: `
         <div class="info-card">
           <div class="info-card-header">
-            <h3>${center.name}</h3>
+            <h3>${center.name}${verifiedBadge}</h3>
             <button class="close-btn" onclick="closeInfoWindow()">✕</button>
           </div>
           <div class="divider"></div>
@@ -918,16 +1199,19 @@
   // 모바일: hidden / peek(28px) / half(52vh) / expanded(86vh)
   function setBottomState(state) {
     const heights = { peek: '28px', half: '52vh', expanded: '86vh' };
-    const locateBtn = document.getElementById('locateBtn');
+    const locateBtn   = document.getElementById('locateBtn');
+    const registerFab = document.querySelector('.register-fab');
     if (state === 'hidden') {
       bottomPanel.style.display = 'none';
       locateBtn.style.bottom = '';
+      if (registerFab) registerFab.style.bottom = '';
     } else {
       bottomPanel.style.display = 'flex';
       bottomPanel.style.height = heights[state];
-      // 내 위치 버튼이 패널과 겹치지 않도록 패널 높이 + 여유 12px
       const panelH = state === 'peek' ? 28 : state === 'half' ? window.innerHeight * 0.52 : window.innerHeight * 0.86;
       locateBtn.style.bottom = (panelH + 12) + 'px';
+      // register-fab도 locateBtn 위로 밀어올림 (locateBtn 높이 48px + 여유 8px)
+      if (registerFab) registerFab.style.bottom = (panelH + 12 + 48 + 8) + 'px';
     }
     bottomPanel.dataset.state = state;
   }
@@ -1053,6 +1337,59 @@
     closeNearbyPanel();
     map.setCenter(new naver.maps.LatLng(37.5665, 126.9780));
     map.setZoom(12);
+  }
+
+  // ── 센터 등록 모달 ──────────────────────────────────────────
+  const REGISTER_URL = 'https://script.google.com/macros/s/AKfycbzBJ-BoeQulhfVd3ykOO7lSbkd8El0wYuCifOR74TzVVC8UXO2aoQM6MlcXdc--mbEW/exec';
+
+  function openRegisterModal() {
+    document.getElementById('modalForm').style.display = 'block';
+    document.getElementById('modalSuccess').style.display = 'none';
+    document.getElementById('reg_name').value = '';
+    document.getElementById('reg_address').value = '';
+    document.getElementById('reg_instagram').value = '';
+    document.getElementById('reg_website').value = '';
+    document.getElementById('registerModal').classList.add('show');
+  }
+
+  function closeRegisterModal() {
+    document.getElementById('registerModal').classList.remove('show');
+  }
+
+  // 모달 바깥 클릭 시 닫기
+  document.getElementById('registerModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRegisterModal();
+  });
+
+  async function submitRegister() {
+    const name     = document.getElementById('reg_name').value.trim();
+    const address  = document.getElementById('reg_address').value.trim();
+    const instagram = document.getElementById('reg_instagram').value.trim();
+    const website  = document.getElementById('reg_website').value.trim();
+
+    if (!name)    { showToast('센터명을 입력해주세요.'); return; }
+    if (!address) { showToast('센터 주소를 입력해주세요.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '제출 중...';
+
+    try {
+      await fetch(REGISTER_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, address, instagram, website }),
+      });
+
+      document.getElementById('modalForm').style.display = 'none';
+      document.getElementById('modalSuccess').style.display = 'block';
+    } catch (e) {
+      showToast('등록 중 오류가 발생했어요. 다시 시도해주세요.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '등록 신청';
+    }
   }
 </script>
 
