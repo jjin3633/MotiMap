@@ -865,13 +865,16 @@
   function addMarker(center) {
     const position = new naver.maps.LatLng(parseFloat(center.lat), parseFloat(center.lng));
 
+    const isSpecial = center.name === '엠지솔루션스 모티피지오';
+    const markerColor = isSpecial ? '#e30000' : '#0072e3';
+    const markerShadow = isSpecial ? 'rgba(227,0,0,0.5)' : 'rgba(0,114,227,0.5)';
     const marker = new naver.maps.Marker({
       map,
       position,
       title: center.name,
       icon: {
         content: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-          <div style="width:18px;height:18px;background:#0072e3;border:1px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,114,227,0.5);"></div>
+          <div style="width:18px;height:18px;background:${markerColor};border:1px solid white;border-radius:50%;box-shadow:0 2px 8px ${markerShadow};"></div>
           <div class="center-label" style="font-size:12px;font-family:'Questrial',sans-serif;color:#080808;font-weight:500;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,0.8),0 -1px 2px rgba(255,255,255,0.8),1px 0 2px rgba(255,255,255,0.8),-1px 0 2px rgba(255,255,255,0.8);">${center.name}</div>
         </div>`,
         anchor: new naver.maps.Point(9, 9),
