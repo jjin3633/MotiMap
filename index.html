@@ -873,9 +873,9 @@
       position,
       title: center.name,
       icon: {
-        content: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+        content: `<div style="position:relative;width:18px;height:18px;">
           <div style="width:18px;height:18px;background:${markerColor};border:1px solid white;border-radius:50%;box-shadow:0 2px 8px ${markerShadow};"></div>
-          <div class="center-label" style="font-size:12px;font-family:'Questrial',sans-serif;color:#080808;font-weight:500;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,0.8),0 -1px 2px rgba(255,255,255,0.8),1px 0 2px rgba(255,255,255,0.8),-1px 0 2px rgba(255,255,255,0.8);">${center.name}</div>
+          <div class="center-label" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:12px;font-family:'Questrial',sans-serif;color:#080808;font-weight:500;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,0.8),0 -1px 2px rgba(255,255,255,0.8),1px 0 2px rgba(255,255,255,0.8),-1px 0 2px rgba(255,255,255,0.8);">${center.name}</div>
         </div>`,
         anchor: new naver.maps.Point(9, 9),
       },
