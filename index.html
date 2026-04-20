@@ -975,10 +975,10 @@
     const infoWindow = new naver.maps.InfoWindow({
       content: `
         <div class="info-card">
-          <div class="info-card-header">
+          <div class="info-card-header" style="align-items:flex-start;">
             <div>
+              ${categoryTagsHtml ? `<div class="category-tags" style="margin-bottom:6px;">${categoryTagsHtml}</div>` : ''}
               <h3>${center.name}</h3>
-              ${categoryTagsHtml ? `<div class="category-tags" style="margin-top:6px;">${categoryTagsHtml}</div>` : ''}
             </div>
             <button class="close-btn" onclick="closeInfoWindow()">✕</button>
           </div>
