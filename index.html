@@ -1207,19 +1207,19 @@
     renderClusters();
   }
 
+  let cacheHit = false;
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const { data, ts } = JSON.parse(cached);
       if (Date.now() - ts < CACHE_TTL) {
         loadCenters(data);
-      } else {
-        throw new Error('cache expired');
+        cacheHit = true;
       }
-    } else {
-      throw new Error('no cache');
     }
-  } catch (_) {
+  } catch (_) {}
+
+  if (!cacheHit) {
     fetch(SHEET_CSV)
       .then(res => res.text())
       .then(text => {
