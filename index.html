@@ -800,6 +800,29 @@
       .register-fab { display: none; }
     }
 
+    /* 온보딩 툴팁 */
+    #onboardingTip {
+      position: fixed;
+      bottom: 96px;
+      right: 76px;
+      background: rgba(20,20,20,0.88);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: 'Questrial', sans-serif;
+      z-index: 9998;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.4s, transform 0.4s;
+      white-space: nowrap;
+    }
+    #onboardingTip.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 768px) {
+      #onboardingTip { right: 76px; bottom: 90px; font-size: 12px; }
+    }
+
   </style>
 </head>
 <body>
@@ -815,7 +838,7 @@
     </button>
     <div class="search-wrap">
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="역이름 또는 주소 입력" autocomplete="off" />
+        <input type="text" id="searchInput" placeholder="센터명, 역이름, 주소 검색" autocomplete="off" />
         <button id="clearBtn" type="button" aria-label="지우기">✕</button>
         <button id="searchBtn">
           <svg id="searchIcon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -925,6 +948,8 @@
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   센터 등록
 </button>
+
+<div id="onboardingTip">📍 현재 위치 버튼을 눌러 내 근처 센터를 찾아보세요!</div>
 
 <button id="locateBtn" title="현재 위치">
   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1118,11 +1143,91 @@
     return true;
   }
 
+  // ── 클러스터링 ──
+  let clusterMarkerList = [];
+
+  function getGridSize(zoom) {
+    if (zoom >= 14) return null;
+    if (zoom >= 12) return 0.015;
+    if (zoom >= 10) return 0.06;
+    if (zoom >= 8)  return 0.25;
+    return 1.0;
+  }
+
+  function renderClusters() {
+    clusterMarkerList.forEach(m => m.setMap(null));
+    clusterMarkerList = [];
+
+    const zoom = map.getZoom();
+    const gridSize = getGridSize(zoom);
+
+    if (!gridSize) {
+      // 줌 14+ : 개별 마커 표시
+      centerMarkers.forEach(({ name, marker, categories }) => {
+        const visible = name === '엠지솔루션스 모티피지오' || activeFilter === '전체' || categories.includes(activeFilter);
+        marker.setMap(visible ? map : null);
+      });
+      return;
+    }
+
+    // 줌 14 미만 : 개별 마커 숨기고 클러스터로
+    centerMarkers.forEach(({ marker }) => marker.setMap(null));
+
+    const filtered = centerMarkers.filter(({ name, categories }) =>
+      name === '엠지솔루션스 모티피지오' || activeFilter === '전체' || categories.includes(activeFilter)
+    );
+
+    const grid = {};
+    filtered.forEach(c => {
+      const lat = c.position.lat();
+      const lng = c.position.lng();
+      const key = `${Math.floor(lat / gridSize)},${Math.floor(lng / gridSize)}`;
+      if (!grid[key]) grid[key] = [];
+      grid[key].push(c);
+    });
+
+    Object.values(grid).forEach(group => {
+      const avgLat = group.reduce((s, c) => s + c.position.lat(), 0) / group.length;
+      const avgLng = group.reduce((s, c) => s + c.position.lng(), 0) / group.length;
+      const pos = new naver.maps.LatLng(avgLat, avgLng);
+
+      if (group.length === 1) {
+        group[0].marker.setMap(map);
+        return;
+      }
+
+      // 지배 카테고리 색상
+      const catCounts = {};
+      group.forEach(c => { const cat = c.categories[0] || ''; catCounts[cat] = (catCounts[cat] || 0) + 1; });
+      const dominantCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0][0];
+      const color = getCategoryColor(dominantCat);
+
+      const size = group.length >= 50 ? 52 : group.length >= 10 ? 44 : 36;
+      const fontSize = group.length >= 100 ? 12 : 14;
+
+      const cm = new naver.maps.Marker({
+        map,
+        position: pos,
+        icon: {
+          content: `<div style="width:${size}px;height:${size}px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 12px ${color}88;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:${fontSize}px;font-family:'Questrial',sans-serif;cursor:pointer;">${group.length}</div>`,
+          anchor: new naver.maps.Point(size / 2, size / 2),
+        },
+        zIndex: 10,
+      });
+      naver.maps.Event.addListener(cm, 'click', () => {
+        map.setCenter(pos);
+        map.setZoom(Math.min(zoom + 3, 15));
+      });
+      clusterMarkerList.push(cm);
+    });
+  }
+
   fetch(SHEET_CSV)
     .then(res => res.text())
     .then(text => {
       const centers = parseCSV(text).filter(c => c.lat && c.lng);
       centers.forEach(addMarker);
+      renderClusters();
     })
     .catch(() => showToast('센터 데이터를 불러오지 못했어요.'));
 
@@ -1140,7 +1245,10 @@
   function updateLabelVisibility() {
     mapEl.classList.toggle('zoom-far', map.getZoom() < 14);
   }
-  naver.maps.Event.addListener(map, 'zoom_changed', updateLabelVisibility);
+  naver.maps.Event.addListener(map, 'zoom_changed', () => {
+    updateLabelVisibility();
+    renderClusters();
+  });
   updateLabelVisibility();
 
   // 지하철역 목록
@@ -1336,10 +1444,7 @@
   let activeFilter = '전체';
   function applyFilter(cat) {
     activeFilter = cat;
-    centerMarkers.forEach(({ name, marker, categories }) => {
-      const visible = name === '엠지솔루션스 모티피지오' || cat === '전체' || categories.includes(cat);
-      marker.setMap(visible ? map : null);
-    });
+    renderClusters();
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.cat === cat);
     });
@@ -1506,6 +1611,16 @@
     gtag('event', 'locate_me_click');
     locateMe();
   });
+
+  // 온보딩 툴팁 (첫 방문 시에만)
+  if (!localStorage.getItem('motimap_onboarded')) {
+    const tip = document.getElementById('onboardingTip');
+    setTimeout(() => tip.classList.add('show'), 800);
+    setTimeout(() => {
+      tip.classList.remove('show');
+      localStorage.setItem('motimap_onboarded', '1');
+    }, 5800);
+  }
 
   function resetMap() {
     searchInput.value = '';
