@@ -800,29 +800,6 @@
       .register-fab { display: none; }
     }
 
-    /* 온보딩 툴팁 */
-    #onboardingTip {
-      position: fixed;
-      bottom: 96px;
-      right: 76px;
-      background: rgba(20,20,20,0.88);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-family: 'Questrial', sans-serif;
-      z-index: 9998;
-      pointer-events: none;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.4s, transform 0.4s;
-      white-space: nowrap;
-    }
-    #onboardingTip.show { opacity: 1; transform: translateY(0); }
-    @media (max-width: 768px) {
-      #onboardingTip { right: 76px; bottom: 90px; font-size: 12px; }
-    }
-
   </style>
 </head>
 <body>
@@ -948,8 +925,6 @@
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   센터 등록
 </button>
-
-<div id="onboardingTip">📍 현재 위치 버튼을 눌러 내 근처 센터를 찾아보세요!</div>
 
 <button id="locateBtn" title="현재 위치">
   <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1612,15 +1587,6 @@
     locateMe();
   });
 
-  // 온보딩 툴팁 (첫 방문 시에만)
-  if (!localStorage.getItem('motimap_onboarded')) {
-    const tip = document.getElementById('onboardingTip');
-    setTimeout(() => tip.classList.add('show'), 800);
-    setTimeout(() => {
-      tip.classList.remove('show');
-      localStorage.setItem('motimap_onboarded', '1');
-    }, 5800);
-  }
 
   function resetMap() {
     searchInput.value = '';
