@@ -1058,7 +1058,10 @@
     const placeUrl = center.placeurl || '';
 
     const categoryTagsHtml = categories.length
-      ? categories.map(cat => `<span class="category-tag">${cat}</span>`).join('')
+      ? categories.map(cat => {
+          const col = getCategoryColor(cat);
+          return `<span class="category-tag" style="background:${col}22;color:${col};border:1px solid ${col}66;">${cat}</span>`;
+        }).join('')
       : '';
 
     const infoWindow = new naver.maps.InfoWindow({
