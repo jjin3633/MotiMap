@@ -1293,8 +1293,8 @@
   let activeFilter = '전체';
   function applyFilter(cat) {
     activeFilter = cat;
-    centerMarkers.forEach(({ marker, categories }) => {
-      const visible = cat === '전체' || categories.includes(cat);
+    centerMarkers.forEach(({ name, marker, categories }) => {
+      const visible = name === '엠지솔루션스 모티피지오' || cat === '전체' || categories.includes(cat);
       marker.setMap(visible ? map : null);
     });
     document.querySelectorAll('.filter-btn').forEach(btn => {
