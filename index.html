@@ -969,18 +969,17 @@
       ? center.category.split(',').map(c => c.trim()).filter(Boolean)
       : [];
     const categoryTagsHtml = categories.length
-      ? `<div class="category-tags">${categories.map(c => `<span class="category-tag">${c}</span>`).join('')}</div>`
+      ? categories.map(c => `<span class="category-tag">${c}</span>`).join('')
       : '';
 
     const infoWindow = new naver.maps.InfoWindow({
       content: `
         <div class="info-card">
           <div class="info-card-header">
-            <h3>${center.name}</h3>
+            <h3>${center.name}${categoryTagsHtml}</h3>
             <button class="close-btn" onclick="closeInfoWindow()">✕</button>
           </div>
           <div class="divider"></div>
-          ${categoryTagsHtml}
           <div class="row"><span>📍</span><span>${center.address}</span></div>
           ${phoneRow}
           ${iconRow}
