@@ -219,18 +219,18 @@
       flex-shrink: 0;
       padding: 6px 14px;
       border-radius: 20px;
-      border: 1.5px solid #e5e5e5;
+      border: 1.5px solid var(--cat-color);
       background: rgba(255,255,255,0.95);
       font-size: 13px;
       font-family: 'Questrial', sans-serif;
       cursor: pointer;
       transition: all 0.15s;
       white-space: nowrap;
-      color: #555;
+      color: var(--cat-color);
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       pointer-events: all;
     }
-    .filter-btn:hover { border-color: var(--cat-color); color: var(--cat-color); }
+    .filter-btn:hover { background: color-mix(in srgb, var(--cat-color) 10%, white); }
     .filter-btn.active { background: var(--cat-color); border-color: var(--cat-color); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--cat-color) 40%, transparent); }
 
     /* info-card 카테고리 태그 */
