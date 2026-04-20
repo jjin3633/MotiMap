@@ -230,8 +230,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       pointer-events: all;
     }
-    .filter-btn:hover { border-color: #0072e3; color: #0072e3; }
-    .filter-btn.active { background: #0072e3; border-color: #0072e3; color: #fff; box-shadow: 0 2px 8px rgba(0,114,227,0.35); }
+    .filter-btn:hover { border-color: var(--cat-color); color: var(--cat-color); }
+    .filter-btn.active { background: var(--cat-color); border-color: var(--cat-color); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--cat-color) 40%, transparent); }
 
     /* info-card 카테고리 태그 */
     .category-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
@@ -840,13 +840,13 @@
 
 <!-- 카테고리 필터 바 -->
 <div id="filterBar">
-  <button class="filter-btn active" data-cat="전체">전체</button>
-  <button class="filter-btn" data-cat="체형교정">체형교정</button>
-  <button class="filter-btn" data-cat="필라테스">필라테스</button>
-  <button class="filter-btn" data-cat="다이어트">다이어트</button>
-  <button class="filter-btn" data-cat="병/의원">병/의원</button>
-  <button class="filter-btn" data-cat="뷰티">뷰티</button>
-  <button class="filter-btn" data-cat="교육기관">교육기관</button>
+  <button class="filter-btn active" data-cat="전체" style="--cat-color:#0072e3;">전체</button>
+  <button class="filter-btn" data-cat="체형교정" style="--cat-color:#FF6B35;">체형교정</button>
+  <button class="filter-btn" data-cat="필라테스" style="--cat-color:#9B59B6;">필라테스</button>
+  <button class="filter-btn" data-cat="다이어트" style="--cat-color:#27AE60;">다이어트</button>
+  <button class="filter-btn" data-cat="병/의원"  style="--cat-color:#E74C3C;">병/의원</button>
+  <button class="filter-btn" data-cat="뷰티"    style="--cat-color:#E91E8C;">뷰티</button>
+  <button class="filter-btn" data-cat="교육기관" style="--cat-color:#607D8B;">교육기관</button>
 </div>
 
 <div id="map"></div>
