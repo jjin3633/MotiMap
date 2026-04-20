@@ -1137,10 +1137,12 @@
     const gridSize = getGridSize(zoom);
 
     if (!gridSize) {
-      // 줌 14+ : 개별 마커 표시
-      centerMarkers.forEach(({ name, marker, categories }) => {
-        const visible = name === '엠지솔루션스 모티피지오' || activeFilter === '전체' || categories.includes(activeFilter);
-        marker.setMap(visible ? map : null);
+      // 줌 14+ : 뷰포트 안 마커만 표시
+      const bounds = map.getBounds();
+      centerMarkers.forEach(({ name, marker, categories, position }) => {
+        const inFilter = name === '엠지솔루션스 모티피지오' || activeFilter === '전체' || categories.includes(activeFilter);
+        const inView = bounds.hasLatLng(position);
+        marker.setMap(inFilter && inView ? map : null);
       });
       return;
     }
@@ -1197,14 +1199,36 @@
     });
   }
 
-  fetch(SHEET_CSV)
-    .then(res => res.text())
-    .then(text => {
-      const centers = parseCSV(text).filter(c => c.lat && c.lng);
-      centers.forEach(addMarker);
-      renderClusters();
-    })
-    .catch(() => showToast('센터 데이터를 불러오지 못했어요.'));
+  const CACHE_KEY = 'motimap_centers_v1';
+  const CACHE_TTL = 60 * 60 * 1000; // 1시간
+
+  function loadCenters(data) {
+    data.forEach(addMarker);
+    renderClusters();
+  }
+
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached);
+      if (Date.now() - ts < CACHE_TTL) {
+        loadCenters(data);
+      } else {
+        throw new Error('cache expired');
+      }
+    } else {
+      throw new Error('no cache');
+    }
+  } catch (_) {
+    fetch(SHEET_CSV)
+      .then(res => res.text())
+      .then(text => {
+        const centers = parseCSV(text).filter(c => c.lat && c.lng);
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: centers, ts: Date.now() })); } catch (_) {}
+        loadCenters(centers);
+      })
+      .catch(() => showToast('센터 데이터를 불러오지 못했어요.'));
+  }
 
   naver.maps.Event.addListener(map, 'click', closeCurrentCard);
   naver.maps.Event.addListener(map, 'dragstart', function() {
@@ -1223,6 +1247,9 @@
   naver.maps.Event.addListener(map, 'zoom_changed', () => {
     updateLabelVisibility();
     renderClusters();
+  });
+  naver.maps.Event.addListener(map, 'dragend', () => {
+    if (map.getZoom() >= 14) renderClusters();
   });
   updateLabelVisibility();
 
