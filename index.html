@@ -1043,12 +1043,12 @@
       ? `<div class="row"><span>📞</span><a href="tel:${center.phone}">${center.phone}</a></div>` : '';
 
     const instaIcon = center.instagram
-      ? `<a href="${center.instagram}" target="_blank" title="인스타그램" style="color:#E1306C;">
+      ? `<a href="${center.instagram}" target="_blank" title="인스타그램" style="color:#E1306C;" onclick="gtag('event','sns_click',{center_name:'${center.name}',type:'instagram'})">
            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.308-3.608C4.516 2.497 5.783 2.226 7.149 2.163 8.415 2.105 8.795 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038.058-1.28.072-1.689.072-4.948s-.014-3.668-.072-4.948c-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
          </a>` : '';
 
     const webIcon = center.website
-      ? `<a href="${center.website}" target="_blank" title="홈페이지" style="color:#0072e3;">
+      ? `<a href="${center.website}" target="_blank" title="홈페이지" style="color:#0072e3;" onclick="gtag('event','sns_click',{center_name:'${center.name}',type:'website'})">
            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
          </a>` : '';
 
@@ -1085,6 +1085,7 @@
     });
 
     naver.maps.Event.addListener(marker, 'click', function () {
+      gtag('event', 'center_click', { center_name: center.name, category: categories[0] || '없음' });
       if (window.innerWidth <= 768) {
         closeInfoWindow();
         showMobileCard(infoWindow.getContent());
@@ -1284,6 +1285,7 @@
   function doSearch() {
     const query = searchInput.value.trim();
     if (!query) return;
+    gtag('event', 'search', { search_term: query });
     autocompleteList.classList.remove('show');
     searchInput.blur();
 
@@ -1340,7 +1342,10 @@
     });
   }
   document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => applyFilter(btn.dataset.cat));
+    btn.addEventListener('click', () => {
+      gtag('event', 'filter_click', { category: btn.dataset.cat });
+      applyFilter(btn.dataset.cat);
+    });
   });
 
   // 현재 위치
@@ -1494,7 +1499,10 @@
     }, function () { showToast('위치 권한을 확인해주세요.'); });
   }
 
-  document.getElementById('locateBtn').addEventListener('click', locateMe);
+  document.getElementById('locateBtn').addEventListener('click', () => {
+    gtag('event', 'locate_me_click');
+    locateMe();
+  });
 
   function resetMap() {
     searchInput.value = '';
