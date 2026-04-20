@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://map.motiphysio.com/sitemap.xml
