@@ -979,6 +979,9 @@
     const position = new naver.maps.LatLng(parseFloat(center.lat), parseFloat(center.lng));
 
     const isSpecial = center.name === '엠지솔루션스 모티피지오';
+    const categories = center.category
+      ? center.category.split(',').map(c => c.trim()).filter(Boolean)
+      : [];
     const marker = new naver.maps.Marker({
       map,
       position,
@@ -1020,9 +1023,6 @@
 
     const placeUrl = center.placeurl || '';
 
-    const categories = center.category
-      ? center.category.split(',').map(c => c.trim()).filter(Boolean)
-      : [];
     const categoryTagsHtml = categories.length
       ? categories.map(cat => `<span class="category-tag">${cat}</span>`).join('')
       : '';
