@@ -911,7 +911,19 @@
   });
 
   let currentInfoWindow = null;
-  const centerMarkers = []; // { name, position, marker, infoWindow }
+  const centerMarkers = [];
+
+  const CATEGORY_COLORS = {
+    '체형교정': '#FF6B35',
+    '필라테스': '#9B59B6',
+    '다이어트': '#27AE60',
+    '병/의원':  '#E74C3C',
+    '뷰티':    '#E91E8C',
+    '교육기관': '#607D8B',
+  };
+  function getCategoryColor(category) {
+    return CATEGORY_COLORS[category] || '#0072e3';
+  }
 
   // 토스트
   function showToast(msg, ms = 2500) {
@@ -978,10 +990,14 @@
         </div>`,
         anchor: new naver.maps.Point(16, 16),
       } : {
-        content: `<div style="position:relative;width:18px;height:18px;will-change:transform;">
-          <div style="width:18px;height:18px;background:#0072e3;border:1px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,114,227,0.4);"></div>
-          <div class="center-label" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:12px;font-family:'Questrial',sans-serif;color:#080808;font-weight:500;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,0.9),0 -1px 3px rgba(255,255,255,0.9),1px 0 3px rgba(255,255,255,0.9),-1px 0 3px rgba(255,255,255,0.9);">${center.name}</div>
-        </div>`,
+        content: (() => {
+          const cat = categories[0] || '';
+          const color = getCategoryColor(cat);
+          return `<div style="position:relative;width:18px;height:18px;will-change:transform;">
+            <div style="width:18px;height:18px;background:${color};border:1px solid white;border-radius:50%;box-shadow:0 1px 4px ${color}66;"></div>
+            <div class="center-label" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:12px;font-family:'Questrial',sans-serif;color:#080808;font-weight:500;white-space:nowrap;text-shadow:0 1px 3px rgba(255,255,255,0.9),0 -1px 3px rgba(255,255,255,0.9),1px 0 3px rgba(255,255,255,0.9),-1px 0 3px rgba(255,255,255,0.9);">${center.name}</div>
+          </div>`;
+        })(),
         anchor: new naver.maps.Point(9, 9),
       },
     });
