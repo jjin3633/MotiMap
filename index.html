@@ -1495,9 +1495,9 @@
       bottomPanel.style.display = 'flex';
       bottomPanel.style.height = heights[state];
       const panelH = state === 'peek' ? 28 : state === 'half' ? window.innerHeight * 0.52 : window.innerHeight * 0.86;
-      locateBtn.style.bottom = (panelH + 12) + 'px';
+      locateBtn.style.bottom = (panelH + 24) + 'px';
       // register-fab도 locateBtn 위로 밀어올림 (locateBtn 높이 48px + 여유 8px)
-      if (registerFab) registerFab.style.bottom = (panelH + 12 + 48 + 8) + 'px';
+      if (registerFab) registerFab.style.bottom = (panelH + 24 + 48 + 8) + 'px';
     }
     bottomPanel.dataset.state = state;
   }
