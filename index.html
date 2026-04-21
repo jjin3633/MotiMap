@@ -1207,7 +1207,7 @@
 
   function loadCenters(data) {
     data.forEach(addMarker);
-    renderClusters();
+    setTimeout(renderClusters, 200);
   }
 
   let cacheHit = false;
