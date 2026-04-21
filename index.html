@@ -586,6 +586,7 @@
         width: 100%;
       }
       .search-bar { width: 100%; }
+      .search-bar input { font-size: 16px; }
       .autocomplete-list { position: fixed; left: 16px; right: 16px; top: auto; width: auto; }
     }
 
@@ -1214,8 +1215,8 @@
     if (cached) {
       const { data, ts } = JSON.parse(cached);
       if (Date.now() - ts < CACHE_TTL) {
-        loadCenters(data);
         cacheHit = true;
+        loadCenters(data);
       }
     }
   } catch (_) {}
