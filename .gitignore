@@ -1,0 +1,38 @@
+# ── 보안 ──
+# 키·인증서 (절대 푸시 금지)
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+.ssh/
+
+# 환경변수·시크릿
+.env
+.env.*
+secrets.json
+credentials.json
+
+# ── 운영·분석 데이터 ──
+# 회원·운영 데이터 (개인정보 보호)
+test_data/
+analytics/
+center_information/
+
+# ── 시스템 파일 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 에디터·IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── 빌드·로그 ──
+node_modules/
+dist/
+build/
+*.log
