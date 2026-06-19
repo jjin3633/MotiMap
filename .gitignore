@@ -20,6 +20,10 @@ test_data/
 analytics/
 center_information/
 
+# ── 기획·내부 문서 (외부 노출 X) ──
+모티맵_*.md
+*_내부.md
+
 # ── 시스템 파일 ──
 .DS_Store
 Thumbs.db
