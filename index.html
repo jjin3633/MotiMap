@@ -114,6 +114,15 @@
       font-family: 'Inter', sans-serif;
       letter-spacing: -0.5px;
       color: #080808;
+      line-height: 0; /* img 감쌀 때 baseline 공백 제거 */
+    }
+    header h1 .logo-img {
+      height: 36px;
+      width: auto;
+      display: block;
+    }
+    @media (max-width: 768px) {
+      header h1 .logo-img { height: 30px; }
     }
 
     header p {
@@ -810,7 +819,7 @@
 <header>
   <div class="header-inner">
     <div class="header-left" style="cursor:pointer;" onclick="resetMap()">
-      <h1>Physio Map</h1>
+      <h1><img src="assets/피지오맵_BI_RGB_BLUE.png" alt="Physio Map" class="logo-img" /></h1>
     </div>
     <button class="register-btn" onclick="openRegisterModal()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
