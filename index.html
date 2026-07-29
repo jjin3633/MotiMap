@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
-  <title>모티맵 | 내 근처 모티피지오 센터 찾기</title>
+  <title>피지오맵 | 내 근처 모티피지오 센터 찾기</title>
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-1KW2YPLT4L"></script>
@@ -26,7 +26,7 @@
 
   <!-- SEO -->
   <meta name="description" content="전국 모티피지오 센터를 지도에서 찾아보세요. 체형교정, 필라테스, 재활, 다이어트/PT 등 내 근처 모티피지오 센터를 쉽게 찾을 수 있습니다." />
-  <meta name="keywords" content="모티피지오, 내 근처 모티피지오, 체형교정, 필라테스, 재활센터, 모티맵, motiphysio" />
+  <meta name="keywords" content="모티피지오, 내 근처 모티피지오, 체형교정, 필라테스, 재활센터, 피지오맵, 모티맵, motiphysio" />
   <meta name="author" content="모티피지오" />
   <link rel="canonical" href="https://map.motiphysio.com" />
 
@@ -39,7 +39,7 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://map.motiphysio.com" />
-  <meta property="og:title" content="모티맵 | 내 근처 모티피지오 센터 찾기" />
+  <meta property="og:title" content="피지오맵 | 내 근처 모티피지오 센터 찾기" />
   <meta property="og:description" content="전국 모티피지오 센터를 지도에서 찾아보세요. 체형교정, 필라테스, 재활, 다이어트/PT 등 내 근처 센터를 쉽게 찾을 수 있습니다." />
   <meta property="og:image" content="https://map.motiphysio.com/assets/og-image.png" />
   <meta property="og:locale" content="ko_KR" />
@@ -49,7 +49,7 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "모티맵",
+    "name": "피지오맵",
     "url": "https://map.motiphysio.com",
     "description": "전국 모티피지오 센터를 지도에서 찾는 서비스",
     "applicationCategory": "HealthApplication",
@@ -810,7 +810,7 @@
 <header>
   <div class="header-inner">
     <div class="header-left" style="cursor:pointer;" onclick="resetMap()">
-      <h1>Moti Map</h1>
+      <h1>Physio Map</h1>
     </div>
     <button class="register-btn" onclick="openRegisterModal()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -839,7 +839,7 @@
   <div class="modal">
     <div id="modalForm">
       <h2>센터 등록</h2>
-      <p class="modal-desc">검토 후 3~5일 이내에 모티맵에 등록됩니다.</p>
+      <p class="modal-desc">검토 후 3~5일 이내에 피지오맵에 등록됩니다.</p>
 
       <div class="field">
         <label>센터명 <span class="required">*</span></label>
@@ -867,7 +867,7 @@
     <div class="modal-success" id="modalSuccess">
       <div class="success-icon">✅</div>
       <h3>신청이 완료됐어요!</h3>
-      <p>검토 후 3~5일 이내에<br>모티맵에 등록됩니다.<br><br>감사합니다 🙏</p>
+      <p>검토 후 3~5일 이내에<br>피지오맵에 등록됩니다.<br><br>감사합니다 🙏</p>
       <div class="modal-actions" style="margin-top:20px;">
         <button class="btn-submit" onclick="closeRegisterModal()">확인</button>
       </div>
@@ -1204,7 +1204,9 @@
     });
   }
 
-  const CACHE_KEY = 'motimap_centers_v1';
+  // 옛 브랜드(모티맵) 캐시 정리 — 새 사용자 재유입 이슈 방지
+  try { localStorage.removeItem('motimap_centers_v1'); } catch (_) {}
+  const CACHE_KEY = 'physiomap_centers_v1';
   const CACHE_TTL = 60 * 60 * 1000; // 1시간
 
   function loadCenters(data) {
